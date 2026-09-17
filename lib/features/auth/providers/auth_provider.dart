@@ -105,7 +105,12 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      // Keep current user if refresh fails
+      if (e is ApiException) {
+        final msg = e.message.toLowerCase();
+        if (msg.contains('unauthorized') || msg.contains('user not found')) {
+          logout();
+        }
+      }
     }
   }
 

@@ -79,7 +79,6 @@ class NotificationService {
       debugPrint('Notification polling error: $e');
       if (e is ApiException) {
         final msg = e.message.toLowerCase();
-        // If user was deleted from admin portal or token expired
         if (msg.contains('unauthorized') || msg.contains('user not found')) {
           _showNotification('Session Expired', 'Your account has been removed or session expired.');
           auth.logout();
