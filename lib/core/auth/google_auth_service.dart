@@ -23,7 +23,7 @@ class GoogleAuthService {
   /// This must match GOOGLE_CLIENT_ID in DAD_Backend/.env.local, because Google
   /// returns it as the "aud" (audience) claim of the ID token.
   static const String webClientId =
-      '943078584636-uhs1ncblcuc441ktjae7lqj2v9iuua1r.apps.googleusercontent.com';
+      '943078584636-aplhg0knknt7cm9g3tajb81sb1ngknp1.apps.googleusercontent.com';
 
   // serverClientId = Web Client ID from Google Cloud Console.
   // The iOS CLIENT_ID is read automatically from GoogleService-Info.plist.
