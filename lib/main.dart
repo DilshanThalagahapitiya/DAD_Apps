@@ -1,5 +1,5 @@
 // ============================================================
-// DAD (Drink and Drive) - Mobile Application
+// SafeRide - Mobile Application
 // ============================================================
 // Flutter app entry point.
 // If a session is restored (Keep me logged in), routes to Home.
@@ -37,7 +37,7 @@ class DadApp extends StatelessWidget {
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, _) {
           return MaterialApp(
-            title: 'DAD - Drink and Drive',
+            title: 'SafeRide',
             debugShowCheckedModeBanner: false,
             locale: localeProvider.locale,
             supportedLocales: LocaleProvider.supportedLocales,

@@ -16,11 +16,11 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get heroTitle =>
-      'குடித்துவிட்டு வாகனம் ஓட்டாதீர்கள்.\nDAD உடன் பாதுகாப்பாக வீடு செல்லுங்கள்.';
+      'குடித்துவிட்டு வாகனம் ஓட்டாதீர்கள்.\nSafeRide உடன் பாதுகாப்பாக வீடு செல்லுங்கள்.';
 
   @override
   String get heroSubtitle =>
-      'DAD உங்களை சரிபார்க்கப்பட்ட பாதுகாப்பான ஓட்டுநர்கள், பயணிகள் மற்றும் கூட்டாளர் ஹோட்டல்களுடன் இணைக்கிறது — அனைவரும் பாதுகாப்பாக வீடு செல்ல.';
+      'SafeRide உங்களை சரிபார்க்கப்பட்ட பாதுகாப்பான ஓட்டுநர்கள், பயணிகள் மற்றும் கூட்டாளர் ஹோட்டல்களுடன் இணைக்கிறது — அனைவரும் பாதுகாப்பாக வீடு செல்ல.';
 
   @override
   String get letsHire => 'ஓட்டுநரை அமர்த்துவோம்';
@@ -47,7 +47,7 @@ class AppLocalizationsTa extends AppLocalizations {
   String get call => 'அழைக்கவும்';
 
   @override
-  String get howDadWorks => 'DAD எவ்வாறு செயல்படுகிறது';
+  String get howDadWorks => 'SafeRide எவ்வாறு செயல்படுகிறது';
 
   @override
   String get step1 => 'பதிவு செய்யுங்கள்';
@@ -392,7 +392,7 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get addVehicleDetailsBody =>
-      'DAD ஓட்டுநரை அமர்த்துவதற்கு முன் உங்கள் வாகன மற்றும் இட விவரங்களைச் சேர்க்க வேண்டும்.\n\nDAD ஓட்டுநர் வந்து உங்கள் சொந்த வாகனத்தை ஓட்டுவார், எனவே உங்கள் வாகன வகை, வாகன எண் மற்றும் ஏற்றும் இடம் எங்களுக்குத் தேவை.';
+      'SafeRide ஓட்டுநரை அமர்த்துவதற்கு முன் உங்கள் வாகன மற்றும் இட விவரங்களைச் சேர்க்க வேண்டும்.\n\nSafeRide ஓட்டுநர் வந்து உங்கள் சொந்த வாகனத்தை ஓட்டுவார், எனவே உங்கள் வாகன வகை, வாகன எண் மற்றும் ஏற்றும் இடம் எங்களுக்குத் தேவை.';
 
   @override
   String get later => 'பின்னர்';

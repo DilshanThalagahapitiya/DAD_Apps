@@ -1,7 +1,7 @@
 // ============================================================
 // Landing Screen
 // ============================================================
-// Shows the DAD welcome/landing page when not logged in.
+// Shows the SafeRide welcome/landing page when not logged in.
 // - "Let's Hire" button → navigates to customer login
 // - "Register" button → navigates to role-selection registration screen
 // - Shows admin-updatable support phone number
@@ -314,7 +314,7 @@ class _LandingScreenState extends State<LandingScreen> {
 }
 
 // ============================================================
-// Step Card for "How DAD Works" section
+// Step Card for "How SafeRide Works" section
 // ============================================================
 class _StepCard extends StatelessWidget {
   final String number;

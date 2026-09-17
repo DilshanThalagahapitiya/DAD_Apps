@@ -115,13 +115,13 @@ abstract class AppLocalizations {
   /// No description provided for @heroTitle.
   ///
   /// In en, this message translates to:
-  /// **'Don\'t Drive Drunk.\nGet Home Safely with DAD.'**
+  /// **'Don\'t Drive Drunk.\nGet Home Safely with SafeRide.'**
   String get heroTitle;
 
   /// No description provided for @heroSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'DAD connects you with verified safe drivers, riders, and partner hotels — so everyone gets home safely.'**
+  /// **'SafeRide connects you with verified safe drivers, riders, and partner hotels — so everyone gets home safely.'**
   String get heroSubtitle;
 
   /// No description provided for @letsHire.
@@ -169,7 +169,7 @@ abstract class AppLocalizations {
   /// No description provided for @howDadWorks.
   ///
   /// In en, this message translates to:
-  /// **'How DAD Works'**
+  /// **'How SafeRide Works'**
   String get howDadWorks;
 
   /// No description provided for @step1.
@@ -817,7 +817,7 @@ abstract class AppLocalizations {
   /// No description provided for @addVehicleDetailsBody.
   ///
   /// In en, this message translates to:
-  /// **'Before you can hire a DAD driver you need to add your vehicle & location details.\n\nA DAD driver will come and drive your own vehicle, so we need your vehicle type, vehicle number and pick-up location.'**
+  /// **'Before you can hire a SafeRide driver you need to add your vehicle & location details.\n\nA SafeRide driver will come and drive your own vehicle, so we need your vehicle type, vehicle number and pick-up location.'**
   String get addVehicleDetailsBody;
 
   /// No description provided for @later.

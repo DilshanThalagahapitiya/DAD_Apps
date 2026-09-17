@@ -1,7 +1,7 @@
 // ============================================================
 // API Client - Central HTTP client
 // ============================================================
-// Handles all HTTP requests to the DAD Backend REST API.
+// Handles all HTTP requests to the SafeRide Backend REST API.
 // Automatically attaches JWT token to authenticated requests.
 // ============================================================
 

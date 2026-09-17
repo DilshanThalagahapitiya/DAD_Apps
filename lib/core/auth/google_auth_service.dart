@@ -21,7 +21,7 @@ class GoogleAuthService {
   // The iOS CLIENT_ID is read automatically from GoogleService-Info.plist.
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // This is the Web Client ID that the backend will verify the token against.
-    // It must match GOOGLE_CLIENT_ID in DAD_Backend/.env.local
+    // It must match GOOGLE_CLIENT_ID in SafeRide_Backend/.env.local
     serverClientId: '943078584636-uhs1ncblcuc441ktjae7lqj2v9iuua1r.apps.googleusercontent.com',
   );
 
