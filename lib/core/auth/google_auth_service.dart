@@ -10,6 +10,8 @@
 //   These come from the Firebase/Google Cloud Console.
 // ============================================================
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -17,12 +19,23 @@ class GoogleAuthService {
   static final GoogleAuthService instance = GoogleAuthService._();
   GoogleAuthService._();
 
+  /// Web Client ID from Google Cloud Console.
+  /// This must match GOOGLE_CLIENT_ID in DAD_Backend/.env.local, because Google
+  /// returns it as the "aud" (audience) claim of the ID token.
+  static const String webClientId =
+      '943078584636-uhs1ncblcuc441ktjae7lqj2v9iuua1r.apps.googleusercontent.com';
+
   // serverClientId = Web Client ID from Google Cloud Console.
   // The iOS CLIENT_ID is read automatically from GoogleService-Info.plist.
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // This is the Web Client ID that the backend will verify the token against.
+<<<<<<< HEAD
+    // It must match GOOGLE_CLIENT_ID in DAD_Backend/.env.local
+    serverClientId: webClientId,
+=======
     // It must match GOOGLE_CLIENT_ID in SafeRide_Backend/.env.local
     serverClientId: '943078584636-uhs1ncblcuc441ktjae7lqj2v9iuua1r.apps.googleusercontent.com',
+>>>>>>> 3514d15a2b2c9add7c5ea415bc61015ca55d0996
   );
 
   /// Signs in with Google and returns the Google account.
@@ -60,12 +73,41 @@ class GoogleAuthService {
       if (auth.idToken == null) {
         debugPrint('❌ [GoogleAuth] ID token is NULL');
         debugPrint('❌ [GoogleAuth] Access token present: ${auth.accessToken != null}');
+        return null;
+      }
+      // Log the audience ("aud") claim: the backend compares it with
+      // GOOGLE_CLIENT_ID in DAD_Backend/.env.local.
+      final claims = decodeJwtPayload(auth.idToken!);
+      debugPrint('🟢 [GoogleAuth] Token aud: ${claims['aud']}');
+      debugPrint('🟢 [GoogleAuth] Token azp: ${claims['azp']}');
+      debugPrint('🟢 [GoogleAuth] Token iss: ${claims['iss']}');
+      debugPrint('🟢 [GoogleAuth] Token email: ${claims['email']}');
+      if (claims['aud'] != webClientId) {
+        debugPrint(
+          '⚠️ [GoogleAuth] Token aud does not match serverClientId ($webClientId). '
+          'Add it to GOOGLE_CLIENT_ID in DAD_Backend/.env.local, or restart the '
+          'backend so the relaxed audience check picks it up.',
+        );
       }
       return auth.idToken;
     } catch (e, stackTrace) {
       debugPrint('❌ [GoogleAuth] Failed to get ID token: $e');
       debugPrint('❌ [GoogleAuth] Stack trace: $stackTrace');
       rethrow;
+    }
+  }
+
+  /// Decodes (without verifying) the payload of a Google JWT ID token.
+  /// Used for diagnostics - e.g. to check the "aud" (audience) claim.
+  static Map<String, dynamic> decodeJwtPayload(String idToken) {
+    try {
+      final parts = idToken.split('.');
+      if (parts.length < 2) return const <String, dynamic>{};
+      final normalized = base64Url.normalize(parts[1]);
+      return jsonDecode(utf8.decode(base64Url.decode(normalized))) as Map<String, dynamic>;
+    } catch (e) {
+      debugPrint('⚠️ [GoogleAuth] Could not decode ID token payload: $e');
+      return const <String, dynamic>{};
     }
   }
 

@@ -270,14 +270,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
 
                       // Keep me logged in (applies to all roles)
-                      CheckboxListTile(
-                        value: _keepLoggedIn,
-                        onChanged: (v) => setState(() => _keepLoggedIn = v ?? true),
-                        title: Text(context.l10n.keepMeLoggedIn,
-                            style: const TextStyle(fontSize: 14)),
-                        controlAffinity: ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
+                      // Wrapped in its own (transparent) Material so the tile
+                      // paints its background/ink on a Material surface instead
+                      // of the white Container above it - otherwise Flutter
+                      // reports "ListTile background color or ink splashes may
+                      // be invisible".
+                      Material(
+                        type: MaterialType.transparency,
+                        child: CheckboxListTile(
+                          value: _keepLoggedIn,
+                          onChanged: (v) =>
+                              setState(() => _keepLoggedIn = v ?? true),
+                          title: Text(context.l10n.keepMeLoggedIn,
+                              style: const TextStyle(fontSize: 14)),
+                          controlAffinity: ListTileControlAffinity.leading,
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
                       ),
                       const SizedBox(height: 8),
 
