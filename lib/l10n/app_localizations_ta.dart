@@ -335,6 +335,39 @@ class AppLocalizationsTa extends AppLocalizations {
       '✅ சுயவிவரம் முடிந்தது! இப்போது ஓட்டுநர்களை அமர்த்தலாம்.';
 
   @override
+  String get completeYourDetails => 'உங்கள் விவரங்களை முழுமையாக்கவும்';
+
+  @override
+  String get completeYourDetailsSubtitle =>
+      'தொடர உங்கள் தனிப்பட்ட விவரங்களை நிரப்பவும்';
+
+  @override
+  String get detailsRequiredInfo =>
+      'ஓட்டுநர்கள் உங்களைத் தொடர்பு கொள்ளவும் அடையாளம் காணவும் உங்கள் தொலைபேசி எண் மற்றும் தே.அ.அ. எண் தேவை.';
+
+  @override
+  String get emailFromGoogle => 'மின்னஞ்சல் (Google இலிருந்து)';
+
+  @override
+  String get dateOfBirthOptional => 'பிறந்த தேதி (விருப்பம்)';
+
+  @override
+  String get saveDetails => 'விவரங்களை சேமிக்கவும்';
+
+  @override
+  String get detailsSaved => '✅ உங்கள் விவரங்கள் சேமிக்கப்பட்டன!';
+
+  @override
+  String get completeDetailsBanner => 'தயவுசெய்து உங்கள் விவரங்களை நிரப்பவும்';
+
+  @override
+  String get completeDetailsBannerBody =>
+      'வாகன விவரங்களை சேர்ப்பதற்கு முன் உங்கள் பெயர், தே.அ.அ. எண் மற்றும் தொலைபேசி எண்ணை சேர்க்கவும்.';
+
+  @override
+  String get fillDetails => 'விவரங்களை நிரப்பு';
+
+  @override
   String failedToSave(String error) {
     return 'சேமிக்க தோல்வி: $error';
   }

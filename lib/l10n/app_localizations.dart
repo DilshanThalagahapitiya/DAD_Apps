@@ -718,6 +718,66 @@ abstract class AppLocalizations {
   /// **'✅ Profile completed! You can now hire drivers.'**
   String get profileCompleted;
 
+  /// No description provided for @completeYourDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Details'**
+  String get completeYourDetails;
+
+  /// No description provided for @completeYourDetailsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in your personal details to continue'**
+  String get completeYourDetailsSubtitle;
+
+  /// No description provided for @detailsRequiredInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number and NIC are needed so drivers can contact you and we can confirm your identity.'**
+  String get detailsRequiredInfo;
+
+  /// No description provided for @emailFromGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Email (from Google)'**
+  String get emailFromGoogle;
+
+  /// No description provided for @dateOfBirthOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of Birth (Optional)'**
+  String get dateOfBirthOptional;
+
+  /// No description provided for @saveDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Details'**
+  String get saveDetails;
+
+  /// No description provided for @detailsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Your details have been saved!'**
+  String get detailsSaved;
+
+  /// No description provided for @completeDetailsBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete your details'**
+  String get completeDetailsBanner;
+
+  /// No description provided for @completeDetailsBannerBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your name, NIC and phone number before adding vehicle details.'**
+  String get completeDetailsBannerBody;
+
+  /// No description provided for @fillDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill Details'**
+  String get fillDetails;
+
   /// No description provided for @failedToSave.
   ///
   /// In en, this message translates to:

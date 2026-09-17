@@ -332,6 +332,39 @@ class AppLocalizationsEn extends AppLocalizations {
       '✅ Profile completed! You can now hire drivers.';
 
   @override
+  String get completeYourDetails => 'Complete Your Details';
+
+  @override
+  String get completeYourDetailsSubtitle =>
+      'Fill in your personal details to continue';
+
+  @override
+  String get detailsRequiredInfo =>
+      'Your phone number and NIC are needed so drivers can contact you and we can confirm your identity.';
+
+  @override
+  String get emailFromGoogle => 'Email (from Google)';
+
+  @override
+  String get dateOfBirthOptional => 'Date of Birth (Optional)';
+
+  @override
+  String get saveDetails => 'Save Details';
+
+  @override
+  String get detailsSaved => '✅ Your details have been saved!';
+
+  @override
+  String get completeDetailsBanner => 'Please complete your details';
+
+  @override
+  String get completeDetailsBannerBody =>
+      'Add your name, NIC and phone number before adding vehicle details.';
+
+  @override
+  String get fillDetails => 'Fill Details';
+
+  @override
   String failedToSave(String error) {
     return 'Failed to save: $error';
   }

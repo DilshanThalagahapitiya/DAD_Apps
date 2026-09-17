@@ -334,6 +334,39 @@ class AppLocalizationsSi extends AppLocalizations {
       '✅ පැතිකඩ සම්පූර්ණයි! දැන් ඔබට රියදුරන් බඳවා ගත හැක.';
 
   @override
+  String get completeYourDetails => 'ඔබේ විස්තර සම්පූර්ණ කරන්න';
+
+  @override
+  String get completeYourDetailsSubtitle =>
+      'ඉදිරියට යාමට ඔබේ පුද්ගලික විස්තර පුරවන්න';
+
+  @override
+  String get detailsRequiredInfo =>
+      'රියදුරන්ට ඔබ හා සම්බන්ධ වීමට සහ ඔබව හඳුනා ගැනීමට ඔබේ දුරකථන අංකය සහ ජා.හැ.අ. අවශ්‍යයි.';
+
+  @override
+  String get emailFromGoogle => 'විද්‍යුත් තැපෑල (Google වෙතින්)';
+
+  @override
+  String get dateOfBirthOptional => 'උපන් දිනය (විකල්ප)';
+
+  @override
+  String get saveDetails => 'විස්තර සුරකින්න';
+
+  @override
+  String get detailsSaved => '✅ ඔබේ විස්තර සුරකින ලදී!';
+
+  @override
+  String get completeDetailsBanner => 'කරුණාකර ඔබේ විස්තර සම්පූර්ණ කරන්න';
+
+  @override
+  String get completeDetailsBannerBody =>
+      'වාහන විස්තර ඇතුළත් කිරීමට පෙර ඔබේ නම, ජා.හැ.අ. සහ දුරකථන අංකය එක් කරන්න.';
+
+  @override
+  String get fillDetails => 'විස්තර පුරවන්න';
+
+  @override
   String failedToSave(String error) {
     return 'සුරැකීම අසාර්ථකයි: $error';
   }

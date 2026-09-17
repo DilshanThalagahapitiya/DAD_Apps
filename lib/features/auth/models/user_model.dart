@@ -53,6 +53,20 @@ class UserModel {
     return location.isNotEmpty && vehicleType.isNotEmpty && vehicleNumber.isNotEmpty && emailOk;
   }
 
+  /// Returns true if the customer's personal details are complete:
+  /// a name, an NIC number and a phone number.
+  /// Google sign-up creates accounts without a phone number or NIC, so this
+  /// is false right after signing in with Google - the app must show the
+  /// "Complete Your Details" screen BEFORE asking for vehicle details.
+  bool get userDetailsComplete {
+    if (role != 'CUSTOMER') return true;
+    final nameOk =
+        fullName.trim().isNotEmpty || (firstName ?? '').trim().isNotEmpty;
+    final phoneOk = phone.trim().isNotEmpty;
+    final nicOk = (nic ?? '').trim().isNotEmpty;
+    return nameOk && phoneOk && nicOk;
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'] ?? '',

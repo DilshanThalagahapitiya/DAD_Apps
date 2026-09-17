@@ -118,7 +118,7 @@ class AuthProvider extends ChangeNotifier {
     final userStr = prefs.getString('dad_user');
     if (userStr == null || userStr.isEmpty) return false;
 
-    // Stored format: "id|email|fullName|role|status|phone"
+    // Stored format: "id|email|fullName|role|status|phone|nic"
     final parts = userStr.split('|');
     if (parts.length >= 4) {
       // CRITICAL: restore the token in the ApiClient so API calls are authenticated
@@ -130,6 +130,8 @@ class AuthProvider extends ChangeNotifier {
         role: parts[3],
         status: parts.length > 4 ? parts[4] : 'APPROVED',
         phone: parts.length > 5 ? parts[5] : '',
+        // NIC is needed to know whether the personal details step is done.
+        nic: parts.length > 6 && parts[6].isNotEmpty ? parts[6] : null,
       );
       // Try to refresh with full profile data from server
       refreshUser();
@@ -167,7 +169,7 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         'dad_user',
-        '${user.id}|${user.email}|${user.fullName}|${user.role}|${user.status}|${user.phone}');
+        '${user.id}|${user.email}|${user.fullName}|${user.role}|${user.status}|${user.phone}|${user.nic ?? ''}');
   }
 
   void _setLoading(bool val) {

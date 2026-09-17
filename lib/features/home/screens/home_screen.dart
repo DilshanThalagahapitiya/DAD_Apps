@@ -17,6 +17,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../auth/screens/complete_profile_screen.dart';
+import '../../auth/screens/complete_user_details_screen.dart';
 import 'request_driver_screen.dart';
 import 'my_rides_screen.dart';
 import 'customer_rides_screen.dart';
@@ -396,29 +397,62 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
   bool _vehiclePromptShown = false;
   // Guards against opening the same dialog twice (auto-show + Request Driver tap).
   bool _vehicleDialogOpen = false;
+  // Same guard for the "Complete Your Details" screen (personal-details step).
+  bool _detailsPromptShown = false;
 
   @override
   void initState() {
     super.initState();
     // After any signup/login the customer lands here. Refresh the profile from
-    // the server so vehicle-detail status is accurate, then pop up the prompt.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkVehicleDetails());
+    // the server, then run the onboarding checks IN ORDER:
+    //   1. personal details (name / NIC / phone)  -> full screen
+    //   2. vehicle & location details             -> popup
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkProfile());
   }
 
-  /// Refresh the profile and, if the customer has not yet filled their own
-  /// vehicle & location details, show the popup asking them to do so.
-  Future<void> _checkVehicleDetails() async {
+  /// Refresh the profile and run the onboarding checks in the correct order.
+  /// Google sign-up creates the account without a phone number or NIC, so the
+  /// "Complete Your Details" screen is shown BEFORE the vehicle-details popup.
+  Future<void> _checkProfile() async {
     if (!mounted) return;
     try {
       await context.read<AuthProvider>().refreshUser();
     } catch (_) {
       // Fall back to the locally cached profile if the refresh fails.
     }
-    if (!mounted || _vehiclePromptShown) return;
+    if (!mounted) return;
+
+    // ---- Step 1: personal details (name, NIC, phone number) ----
+    if (!_areUserDetailsComplete()) {
+      if (!_detailsPromptShown) {
+        _detailsPromptShown = true;
+        await _openUserDetailsForm();
+      }
+      if (!mounted) return;
+      // Still missing? Don't stack the vehicle popup on top of this step.
+      if (!_areUserDetailsComplete()) return;
+    }
+
+    // ---- Step 2: vehicle & location details ----
+    if (_vehiclePromptShown) return;
     if (!_isProfileComplete(context)) {
       _vehiclePromptShown = true;
       _showVehicleDetailsDialog();
     }
+  }
+
+  /// Opens the "Complete Your Details" screen (name, NIC, phone, DOB) and
+  /// refreshes the profile afterwards so the banners update.
+  /// Returns true when the details were saved successfully.
+  Future<bool> _openUserDetailsForm() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const CompleteUserDetailsScreen()),
+    );
+    if (!mounted) return saved ?? false;
+    await context.read<AuthProvider>().refreshUser();
+    if (mounted) setState(() {});
+    return saved ?? false;
   }
 
   /// Popup shown when the customer has no vehicle details yet — they must add
@@ -562,8 +596,58 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
               style: const TextStyle(fontSize: 14, color: Colors.grey)),
           const SizedBox(height: 16),
 
-          // ⚠️ Profile Incomplete Notification
-          if (!(_isProfileComplete(context))) ...[
+          // ⚠️ Personal details missing (e.g. a fresh Google account has no
+          // phone number or NIC). This must be completed BEFORE the
+          // vehicle-details step below.
+          if (!_areUserDetailsComplete()) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.assignment_ind,
+                      color: Colors.red.shade700, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.completeDetailsBanner,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          context.l10n.completeDetailsBannerBody,
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.red.shade800),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _openUserDetailsForm,
+                    child: Text(context.l10n.fillDetails,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // ⚠️ Profile Incomplete Notification (vehicle details — only shown
+          // once the personal details step above is done)
+          if (_areUserDetailsComplete() && !(_isProfileComplete(context))) ...[
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(14),
@@ -664,6 +748,13 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
                 } catch (_) {}
               }
               if (!context.mounted) return;
+              // Personal details (name / NIC / phone) come FIRST — a customer
+              // must fill these before the vehicle-details step.
+              if (!_areUserDetailsComplete()) {
+                await _openUserDetailsForm();
+                if (!context.mounted) return;
+                if (!_areUserDetailsComplete()) return;
+              }
               final user = auth.user;
               if (user == null || !user.profileComplete) {
                 _showVehicleDetailsDialog();
@@ -721,6 +812,15 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
     final user = context.read<AuthProvider>().user;
     if (user == null) return true;
     return user.profileComplete;
+  }
+
+  /// Personal details (name, NIC, phone number) — checked BEFORE the vehicle
+  /// details. Google sign-up accounts start with an empty phone number and no
+  /// NIC, so this returns false right after signing in with Google.
+  bool _areUserDetailsComplete() {
+    final user = context.read<AuthProvider>().user;
+    if (user == null) return true;
+    return user.userDetailsComplete;
   }
 }
 
