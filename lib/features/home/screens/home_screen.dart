@@ -15,7 +15,7 @@ import '../../../core/widgets/language_selector.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../auth/screens/login_screen.dart';
+import '../../auth/screens/landing_screen.dart';
 import '../../auth/screens/complete_profile_screen.dart';
 import '../../auth/screens/complete_user_details_screen.dart';
 import 'request_driver_screen.dart';
@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    MaterialPageRoute(builder: (_) => const LandingScreen()),
                     (route) => false,
                   );
                 }
@@ -126,7 +126,7 @@ class HomeScreen extends StatelessWidget {
               if (context.mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const LandingScreen()),
                   (route) => false,
                 );
               }
@@ -191,7 +191,7 @@ class HomeScreen extends StatelessWidget {
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const LandingScreen()),
                       (route) => false,
                     );
                   }
@@ -569,7 +569,7 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
                   if (context.mounted) {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      MaterialPageRoute(builder: (_) => const LandingScreen()),
                       (route) => false,
                     );
                   }

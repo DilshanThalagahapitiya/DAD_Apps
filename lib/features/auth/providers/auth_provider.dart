@@ -153,6 +153,9 @@ class AuthProvider extends ChangeNotifier {
   // ---- LOGOUT ----
   Future<void> logout() async {
     await _repo.logout();
+    try {
+      await GoogleAuthService.instance.signOut();
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('dad_token');
     await prefs.remove('dad_user');
