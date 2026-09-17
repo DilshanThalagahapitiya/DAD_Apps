@@ -76,15 +76,8 @@ class NotificationService {
         _lastRideStatus = newRideStatus;
       }
     } catch (e) {
+      // Ignore polling errors (e.g. no internet)
       debugPrint('Notification polling error: $e');
-      if (e is ApiException) {
-        final msg = e.message.toLowerCase();
-        if (msg.contains('unauthorized') || msg.contains('user not found')) {
-          _showNotification('Session Expired', 'Your account has been removed or session expired.');
-          auth.logout();
-          stopPolling();
-        }
-      }
     }
   }
 
