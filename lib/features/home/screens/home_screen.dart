@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: CircleAvatar(
                   radius: 17,
-                  backgroundColor: Colors.white,
+                  backgroundColor: Colors.red,
                   backgroundImage: (user?.googlePhotoUrl != null && user!.googlePhotoUrl!.isNotEmpty)
                       ? NetworkImage(user!.googlePhotoUrl!)
                       : null,

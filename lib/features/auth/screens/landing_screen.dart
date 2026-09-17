@@ -70,18 +70,18 @@ class _LandingScreenState extends State<LandingScreen> {
               // Logo
               Center(
                 child: Container(
-                  width: 80,
-                  height: 80,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   clipBehavior: Clip.antiAlias,
                   alignment: Alignment.center,
                   child: _logoUrl != null
                       ? CachedNetworkImage(
                           imageUrl: '${AppConstants.baseUrl}$_logoUrl',
-                          fit: BoxFit.cover,
+                          fit: BoxFit.contain,
                           placeholder: (_, __) => const Center(
                             child: SizedBox(
                               width: 20,
@@ -109,26 +109,6 @@ class _LandingScreenState extends State<LandingScreen> {
                             color: Colors.indigo,
                           ),
                         ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              Text(
-                context.l10n.appName,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                context.l10n.appTagline,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 32),
