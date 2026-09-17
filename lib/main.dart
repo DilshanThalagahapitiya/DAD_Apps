@@ -11,6 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:dad_app/l10n/app_localizations.dart';
 import 'core/localization/locale_provider.dart';
+import 'core/services/notification_service.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/landing_screen.dart';
 import 'features/home/screens/home_screen.dart';
@@ -34,11 +35,20 @@ class DadApp extends StatelessWidget {
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()..restoreSession()),
       ],
-      child: Consumer<LocaleProvider>(
-        builder: (context, localeProvider, _) {
+      child: Consumer2<LocaleProvider, AuthProvider>(
+        builder: (context, localeProvider, authProvider, _) {
+          
+          // Start or stop notification polling based on auth state
+          if (authProvider.isLoggedIn) {
+            NotificationService.instance.startPolling(authProvider);
+          } else {
+            NotificationService.instance.stopPolling();
+          }
+
           return MaterialApp(
             title: 'SafeRide',
             debugShowCheckedModeBanner: false,
+            scaffoldMessengerKey: notificationKey,
             locale: localeProvider.locale,
             supportedLocales: LocaleProvider.supportedLocales,
             localizationsDelegates: const [
