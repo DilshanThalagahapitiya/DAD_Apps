@@ -15,11 +15,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTagline => 'Drink and Drive Safe';
 
   @override
-  String get heroTitle => 'Don\'t Drive Drunk.\nGet Home Safely with DAD.';
+  String get heroTitle => 'Don\'t Drive Drunk.\nGet Home Safely with SafeRide.';
 
   @override
   String get heroSubtitle =>
-      'DAD connects you with verified safe drivers, riders, and partner hotels — so everyone gets home safely.';
+      'SafeRide connects you with verified safe drivers, riders, and partner hotels — so everyone gets home safely.';
 
   @override
   String get letsHire => 'Let\'s Hire';
@@ -45,7 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get call => 'CALL';
 
   @override
-  String get howDadWorks => 'How DAD Works';
+  String get howDadWorks => 'How SafeRide Works';
 
   @override
   String get step1 => 'Register';
@@ -389,7 +389,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addVehicleDetailsBody =>
-      'Before you can hire a DAD driver you need to add your vehicle & location details.\n\nA DAD driver will come and drive your own vehicle, so we need your vehicle type, vehicle number and pick-up location.';
+      'Before you can hire a SafeRide driver you need to add your vehicle & location details.\n\nA SafeRide driver will come and drive your own vehicle, so we need your vehicle type, vehicle number and pick-up location.';
 
   @override
   String get later => 'Later';

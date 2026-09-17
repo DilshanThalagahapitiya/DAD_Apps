@@ -1,7 +1,7 @@
 // ============================================================
 // App Constants
 // ============================================================
-// Central configuration for the DAD application.
+// Central configuration for the SafeRide application.
 // ============================================================
 
 class AppConstants {
