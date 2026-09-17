@@ -2,7 +2,7 @@
     <!-- Required for network access to the DAD backend API -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="dad_app"
+        android:label="SafeRide"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
