@@ -30,12 +30,29 @@ class ApiClient {
   ApiClient._();
 
   String? _token;
+  // Tenant-wise theming: identifies this app build so the backend returns its
+  // own brand colors. Defaults to the build-time TENANT_ID (AppConstants).
+  String? _tenantId =
+      AppConstants.tenantId.isEmpty ? null : AppConstants.tenantId;
 
   void setToken(String? token) => _token = token;
   String? get token => _token;
 
+  /// Override the tenant at runtime (e.g. after a tenant-specific login).
+  /// Pass null/empty to fall back to the build-time [AppConstants.tenantId].
+  void setTenantId(String? tenantId) {
+    _tenantId = (tenantId == null || tenantId.isEmpty)
+        ? (AppConstants.tenantId.isEmpty ? null : AppConstants.tenantId)
+        : tenantId;
+  }
+
+  String? get tenantId => _tenantId;
+
   Map<String, String> _headers({bool auth = true}) {
     final headers = {'Content-Type': 'application/json'};
+    if (_tenantId != null && _tenantId!.isNotEmpty) {
+      headers['X-Tenant-Id'] = _tenantId!;
+    }
     if (auth && _token != null) {
       headers['Authorization'] = 'Bearer $_token';
     }

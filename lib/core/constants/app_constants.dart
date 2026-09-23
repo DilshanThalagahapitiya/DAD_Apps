@@ -9,6 +9,16 @@ class AppConstants {
   // static const String baseUrl = 'http://localhost:3000';
     static const String baseUrl = 'https://endowment-slideshow-panorama.ngrok-free.dev';
 
+  // Tenant-wise theming ------------------------------------------------
+  // The tenant this app build belongs to. The admin panel saves a separate
+  // brand color theme per tenant, and the backend returns the matching one
+  // for whatever key this app sends in the `X-Tenant-Id` header.
+  //
+  // Set it at build time:
+  //   flutter build apk --dart-define=TENANT_ID=hotel-abc
+  //
+  // Leave it unset ("") to use the global (default) brand colors.
+  static const String tenantId = String.fromEnvironment('TENANT_ID', defaultValue: '');
 
   // App info
   static const String appName = 'Safe Ride';

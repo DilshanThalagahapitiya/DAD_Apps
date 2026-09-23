@@ -15,8 +15,15 @@ import '../network/api_client.dart';
 import 'app_theme.dart';
 
 class ThemeProvider extends ChangeNotifier {
-  static const String _primaryKey = 'dad_theme_primary';
-  static const String _secondaryKey = 'dad_theme_secondary';
+  // Cache keys are per tenant — the same device may run app builds that belong
+  // to different tenants, and each must keep its own last-known colors.
+  String get _cacheSuffix {
+    final tenant = ApiClient.instance.tenantId;
+    return (tenant == null || tenant.isEmpty) ? '' : '_$tenant';
+  }
+
+  String get _primaryKey => 'dad_theme_primary$_cacheSuffix';
+  String get _secondaryKey => 'dad_theme_secondary$_cacheSuffix';
 
   Color _seed = AppTheme.defaultSeed;
   Color? _secondarySeed;
