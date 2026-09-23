@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 
 class RiderSignupForm extends StatefulWidget {
   const RiderSignupForm({super.key});
@@ -59,7 +59,7 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration submitted! Wait for admin approval.')),
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const StartupScreen()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Registration failed')),
@@ -75,12 +75,12 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _section(context.l10n.personalDetails, [
-            _field(_fName, context.l10n.firstName, Icons.person),
+            _field(_fName, context.l10n.firstName, Icons.person_rounded),
             _field(_lName, context.l10n.lastName, Icons.person_outline),
             _field(_email, context.l10n.emailAddress, Icons.email, email: true),
-            _field(_phone, context.l10n.phoneNumber, Icons.phone, number: true),
+            _field(_phone, context.l10n.phoneNumber, Icons.phone_rounded, number: true),
             _field(_nic, context.l10n.nic, Icons.badge_outlined),
-            _field(_address, context.l10n.homeAddress, Icons.home),
+            _field(_address, context.l10n.homeAddress, Icons.home_rounded),
             _field(_city, context.l10n.city, Icons.location_city),
             _field(_licenseNo, context.l10n.licenseNumber, Icons.card_membership),
           ]),
@@ -89,15 +89,11 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
             _field(_emergencyPhone, context.l10n.emergencyContactPhone, Icons.phone_in_talk, number: true),
           ]),
           _section(context.l10n.loginDetails, [
-            _field(_password, context.l10n.passwordStar, Icons.lock, obscure: true),
+            _field(_password, context.l10n.passwordStar, Icons.lock_rounded, obscure: true),
           ]),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.indigo,
-            ),
             child: Text(context.l10n.registerAsRider),
           ),
         ],
@@ -132,7 +128,6 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: const OutlineInputBorder(),
         ),
         validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
       ),

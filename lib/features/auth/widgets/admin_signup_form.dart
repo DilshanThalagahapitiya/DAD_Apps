@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 
 class AdminSignupForm extends StatefulWidget {
   const AdminSignupForm({super.key});
@@ -46,7 +46,7 @@ class _AdminSignupFormState extends State<AdminSignupForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.adminRegistered)),
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const StartupScreen()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? context.l10n.registrationFailed)),
@@ -66,18 +66,14 @@ class _AdminSignupFormState extends State<AdminSignupForm> {
             child: Text(context.l10n.adminDetails,
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           ),
-          _field(_fName, context.l10n.firstName, Icons.person),
+          _field(_fName, context.l10n.firstName, Icons.person_rounded),
           _field(_lName, context.l10n.lastName, Icons.person_outline),
           _field(_email, context.l10n.emailAddress, Icons.email, email: true),
-          _field(_phone, context.l10n.phoneNumber, Icons.phone, number: true),
-          _field(_password, context.l10n.passwordStar, Icons.lock, obscure: true),
+          _field(_phone, context.l10n.phoneNumber, Icons.phone_rounded, number: true),
+          _field(_password, context.l10n.passwordStar, Icons.lock_rounded, obscure: true),
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.indigo,
-            ),
             child: Text(context.l10n.registerAsAdmin),
           ),
         ],
@@ -100,7 +96,6 @@ class _AdminSignupFormState extends State<AdminSignupForm> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: const OutlineInputBorder(),
         ),
         validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
       ),

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 
 class CompleteUserDetailsScreen extends StatefulWidget {
@@ -77,6 +78,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final successColor = context.statusColors.success;
     setState(() => _saving = true);
 
     try {
@@ -98,7 +100,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.detailsSaved),
-          backgroundColor: Colors.green,
+          backgroundColor: successColor,
         ),
       );
       navigator.pop(true);
@@ -114,35 +116,43 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.read<AuthProvider>().user;
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      appBar: AppBar(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(children: [
+      AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         title: Text(context.l10n.completeYourDetails,
             style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context, false),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+      Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.sheet),
             ),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.person_pin_circle,
-                      size: 48, color: Colors.indigo),
+                  Icon(Icons.person_pin_circle_rounded,
+                      size: 48, color: scheme.primary),
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.completeYourDetailsSubtitle,
@@ -150,7 +160,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 12),
-                  _infoCard(context.l10n.detailsRequiredInfo),
+                  _infoCard(context, context.l10n.detailsRequiredInfo),
                   const SizedBox(height: 20),
 
                   // First name
@@ -159,8 +169,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                       labelText: context.l10n.firstName,
-                      prefixIcon: const Icon(Icons.person),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person_rounded),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? context.l10n.firstNameRequired
@@ -174,8 +183,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                       labelText: context.l10n.lastName,
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.person_outline_rounded),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? context.l10n.required
@@ -189,8 +197,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     enabled: false,
                     decoration: InputDecoration(
                       labelText: context.l10n.emailFromGoogle,
-                      prefixIcon: const Icon(Icons.email),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.email_rounded),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -202,7 +209,6 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     decoration: InputDecoration(
                       labelText: context.l10n.nicNumber,
                       prefixIcon: const Icon(Icons.badge_outlined),
-                      border: const OutlineInputBorder(),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? context.l10n.nicRequired
@@ -216,8 +222,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: context.l10n.phoneNumber,
-                      prefixIcon: const Icon(Icons.phone),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.phone_rounded),
                     ),
                     validator: (v) => (v == null || v.trim().isEmpty)
                         ? context.l10n.phoneRequired
@@ -233,8 +238,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                       decoration: InputDecoration(
                         labelText: context.l10n.dateOfBirthOptional,
                         prefixIcon: const Icon(Icons.cake_outlined),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: const Icon(Icons.calendar_today, size: 18),
+                        suffixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
                       ),
                       child: Text(
                         _dob == null ? '' : _formatDate(_dob!),
@@ -247,13 +251,6 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                   // Save button
                   ElevatedButton.icon(
                     onPressed: _saving ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: Colors.indigo,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
                     icon: _saving
                         ? const SizedBox(
                             width: 20,
@@ -263,38 +260,36 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.check, color: Colors.white),
-                    label: Text(
-                      _saving ? context.l10n.saving : context.l10n.saveDetails,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
+                        : const Icon(Icons.check_rounded),
+                    label: Text(_saving ? context.l10n.saving : context.l10n.saveDetails),
                   ),
                 ],
               ),
             ),
           ),
+      )),
+          ]),
         ),
       ),
     );
   }
 
-  Widget _infoCard(String text) {
+  Widget _infoCard(BuildContext context, String text) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.indigo.shade50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.indigo.shade200),
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.button),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: Colors.indigo, size: 20),
+          Icon(Icons.info_outline_rounded, color: scheme.primary, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 12, color: Colors.indigo),
+              style: TextStyle(fontSize: 12, color: scheme.primary),
             ),
           ),
         ],

@@ -3,16 +3,22 @@
 // ============================================================
 // Allows customers to add or edit their vehicle details
 // at any time. Pre-populates with existing data.
+// When `embedded` is true, this screen renders as a tab inside
+// CustomerShell (no Scaffold/AppBar of its own). When pushed
+// directly (e.g. from Profile), it renders its own app bar with
+// a back button.
 // ============================================================
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 
 class MyVehicleScreen extends StatefulWidget {
-  const MyVehicleScreen({super.key});
+  final bool embedded;
+  const MyVehicleScreen({super.key, this.embedded = false});
   @override
   State<MyVehicleScreen> createState() => _MyVehicleScreenState();
 }
@@ -71,12 +77,12 @@ class _MyVehicleScreenState extends State<MyVehicleScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Vehicle details saved!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(context.l10n.vehicleDetailsSaved),
+          backgroundColor: context.statusColors.success,
         ),
       );
-      Navigator.pop(context);
+      if (!widget.embedded) Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,128 +95,112 @@ class _MyVehicleScreenState extends State<MyVehicleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final body = SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20, widget.embedded ? 12 : 20, 20, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.embedded)
+              Text(context.l10n.myVehicle,
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+            if (widget.embedded) const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(22),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: context.statusColors.warningContainer,
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Icon(Icons.directions_car_rounded, color: context.statusColors.warning, size: 32),
+                      ),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Vehicle Details',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Add or edit your vehicle details. You can update these at any time.',
+                        style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 22),
+
+                      _field(_location, context.l10n.locationGoogleMaps, Icons.map_rounded),
+                      const SizedBox(height: 12),
+
+                      _field(_vehicleType, context.l10n.vehicleType, Icons.directions_car_rounded),
+                      const SizedBox(height: 12),
+
+                      DropdownButtonFormField<String>(
+                        initialValue: _transmission,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.transmissionType,
+                          prefixIcon: const Icon(Icons.settings_rounded),
+                        ),
+                        items: [
+                          DropdownMenuItem(value: 'AUTO', child: Text(context.l10n.auto)),
+                          DropdownMenuItem(value: 'MANUAL', child: Text(context.l10n.manual)),
+                        ],
+                        onChanged: (v) => setState(() => _transmission = v!),
+                      ),
+                      const SizedBox(height: 12),
+
+                      _field(_vehicleNumber, context.l10n.vehicleNumber, Icons.confirmation_number_rounded),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _specialNote,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.specialNoteOptional,
+                          prefixIcon: const Icon(Icons.notes_rounded),
+                          alignLabelWithHint: true,
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+
+                      FilledButton.icon(
+                        onPressed: _saving ? null : _save,
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.save_rounded),
+                        label: Text(_saving ? context.l10n.saving : context.l10n.saveVehicleDetails),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (widget.embedded) return body;
+
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(context.l10n.myVehicle,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(context.l10n.myVehicle),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(Icons.directions_car,
-                      color: Colors.orange, size: 48),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Vehicle Details',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add or edit your vehicle details. You can update these at any time.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Location
-                  _field(
-                      _location, context.l10n.locationGoogleMaps, Icons.map),
-                  const SizedBox(height: 12),
-
-                  // Vehicle Type
-                  _field(
-                      _vehicleType, context.l10n.vehicleType, Icons.directions_car),
-                  const SizedBox(height: 12),
-
-                  // Transmission
-                  DropdownButtonFormField<String>(
-                    initialValue: _transmission,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.transmissionType,
-                      prefixIcon: const Icon(Icons.settings),
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: [
-                      DropdownMenuItem(value: 'AUTO', child: Text(context.l10n.auto)),
-                      DropdownMenuItem(value: 'MANUAL', child: Text(context.l10n.manual)),
-                    ],
-                    onChanged: (v) => setState(() => _transmission = v!),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Vehicle Number
-                  _field(_vehicleNumber, context.l10n.vehicleNumber,
-                      Icons.confirmation_number),
-                  const SizedBox(height: 12),
-
-                  // Special Note
-                  TextFormField(
-                    controller: _specialNote,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.specialNoteOptional,
-                      prefixIcon: const Icon(Icons.notes),
-                      border: const OutlineInputBorder(),
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Save button
-                  ElevatedButton.icon(
-                    onPressed: _saving ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: Colors.indigo,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: _saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.save, color: Colors.white),
-                    label: Text(
-                      _saving ? context.l10n.saving : context.l10n.saveVehicleDetails,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      body: body,
     );
   }
 
@@ -221,7 +211,6 @@ class _MyVehicleScreenState extends State<MyVehicleScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
       ),
       validator: (v) => (v == null || v.isEmpty) ? context.l10n.required : null,
     );

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 
 class DriverSignupForm extends StatefulWidget {
   const DriverSignupForm({super.key});
@@ -62,7 +62,7 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration submitted! Wait for admin approval.')),
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const StartupScreen()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Registration failed')),
@@ -78,10 +78,10 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _sectionTitle(context.l10n.personalDetails),
-          _field(_fName, context.l10n.firstName, Icons.person),
+          _field(_fName, context.l10n.firstName, Icons.person_rounded),
           _field(_lName, context.l10n.lastName, Icons.person_outline),
           _field(_email, context.l10n.emailAddress, Icons.email, email: true),
-          _field(_phone, context.l10n.phoneNumber, Icons.phone, number: true),
+          _field(_phone, context.l10n.phoneNumber, Icons.phone_rounded, number: true),
           _field(_nic, context.l10n.nic, Icons.badge_outlined),
           _field(_city, context.l10n.city, Icons.location_city),
           const SizedBox(height: 12),
@@ -91,7 +91,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _licenseCategory,
             decoration: InputDecoration(
               labelText: context.l10n.licenseCategory,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'LIGHT_WEIGHT', child: Text(context.l10n.lightWeight)),
@@ -106,7 +105,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _vehicleType,
             decoration: InputDecoration(
               labelText: context.l10n.preferredVehicle,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'CAR', child: Text(context.l10n.car)),
@@ -124,7 +122,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _transmission,
             decoration: InputDecoration(
               labelText: context.l10n.transmission,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'AUTO', child: Text(context.l10n.auto)),
@@ -134,14 +131,10 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             onChanged: (v) => setState(() => _transmission = v!),
           ),
           const SizedBox(height: 12),
-          _field(_password, context.l10n.passwordStar, Icons.lock, obscure: true),
+          _field(_password, context.l10n.passwordStar, Icons.lock_rounded, obscure: true),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.indigo,
-            ),
             child: Text(context.l10n.registerAsDriver),
           ),
         ],
@@ -170,7 +163,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: const OutlineInputBorder(),
         ),
         validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
       ),

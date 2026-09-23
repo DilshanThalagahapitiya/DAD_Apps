@@ -14,6 +14,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/widgets/language_selector.dart';
+import '../../../core/theme/app_theme.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 
@@ -51,9 +52,17 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      body: SafeArea(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -74,7 +83,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   height: 140,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(36),
                   ),
                   clipBehavior: Clip.antiAlias,
                   alignment: Alignment.center,
@@ -82,31 +91,31 @@ class _LandingScreenState extends State<LandingScreen> {
                       ? CachedNetworkImage(
                           imageUrl: '${AppConstants.baseUrl}$_logoUrl',
                           fit: BoxFit.contain,
-                          placeholder: (_, __) => const Center(
+                          placeholder: (_, __) => Center(
                             child: SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.indigo,
+                                color: scheme.primary,
                               ),
                             ),
                           ),
-                          errorWidget: (_, __, ___) => const Text(
+                          errorWidget: (_, __, ___) => Text(
                             'D',
                             style: TextStyle(
                               fontSize: 42,
                               fontWeight: FontWeight.bold,
-                              color: Colors.indigo,
+                              color: scheme.primary,
                             ),
                           ),
                         )
-                      : const Text(
+                      : Text(
                           'D',
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo,
+                            color: scheme.primary,
                           ),
                         ),
                 ),
@@ -146,7 +155,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.directions_car, color: Colors.white, size: 28),
+                icon: const Icon(Icons.directions_car_rounded, color: Colors.white, size: 28),
                 label: Text(
                   context.l10n.letsHire,
                   style: const TextStyle(
@@ -159,9 +168,9 @@ class _LandingScreenState extends State<LandingScreen> {
                   backgroundColor: Colors.amber.shade600,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.button + 4),
                   ),
-                  elevation: 8,
+                  elevation: 0,
                 ),
               ),
               const SizedBox(height: 12),
@@ -174,7 +183,7 @@ class _LandingScreenState extends State<LandingScreen> {
                     MaterialPageRoute(builder: (_) => const SignupScreen()),
                   );
                 },
-                icon: const Icon(Icons.person_add_alt_1, color: Colors.white, size: 22),
+                icon: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 22),
                 label: Text(
                   context.l10n.register,
                   style: const TextStyle(
@@ -188,7 +197,7 @@ class _LandingScreenState extends State<LandingScreen> {
                   side: const BorderSide(color: Colors.white70, width: 1.5),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(AppRadius.button + 4),
                   ),
                 ),
               ),
@@ -223,11 +232,11 @@ class _LandingScreenState extends State<LandingScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.headset_mic, color: Colors.green, size: 36),
+                    Icon(Icons.headset_mic_rounded, color: context.statusColors.success, size: 36),
                     const SizedBox(height: 8),
                     Text(
                       context.l10n.support24_7,
@@ -254,12 +263,12 @@ class _LandingScreenState extends State<LandingScreen> {
                           ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.green.shade600,
-                          borderRadius: BorderRadius.circular(12),
+                          color: context.statusColors.success,
+                          borderRadius: BorderRadius.circular(AppRadius.button),
                         ),
                         child: Text(
                           _contactPhone,
@@ -308,6 +317,7 @@ class _LandingScreenState extends State<LandingScreen> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -333,7 +343,7 @@ class _StepCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.card - 8),
       ),
       child: Column(
         children: [

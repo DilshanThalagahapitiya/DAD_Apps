@@ -9,8 +9,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 
 class CustomerSignupForm extends StatefulWidget {
   const CustomerSignupForm({super.key});
@@ -54,13 +55,13 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(context.l10n.accountCreatedCompleteProfile),
-          backgroundColor: Colors.indigo,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           duration: const Duration(seconds: 4),
         ),
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const StartupScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -71,6 +72,7 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Form(
       key: _formKey,
       child: Column(
@@ -81,18 +83,17 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.indigo.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.indigo.shade200),
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.card - 4),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.indigo, size: 20),
+                Icon(Icons.info_outline_rounded, color: scheme.onPrimaryContainer, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     context.l10n.quickSignupInfo,
-                    style: const TextStyle(fontSize: 12, color: Colors.indigo),
+                    style: TextStyle(fontSize: 12, color: scheme.onPrimaryContainer),
                   ),
                 ),
               ],
@@ -107,8 +108,7 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 labelText: context.l10n.firstName,
-                prefixIcon: const Icon(Icons.person),
-                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person_rounded),
               ),
               validator: (v) =>
                   (v == null || v.isEmpty) ? context.l10n.firstNameRequired : null,
@@ -124,7 +124,6 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
               decoration: InputDecoration(
                 labelText: context.l10n.emailAddress,
                 prefixIcon: const Icon(Icons.email_outlined),
-                border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 if (v == null || v.isEmpty) return context.l10n.emailRequired;
@@ -143,7 +142,6 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
               decoration: InputDecoration(
                 labelText: context.l10n.nicNumber,
                 prefixIcon: const Icon(Icons.badge_outlined),
-                border: const OutlineInputBorder(),
               ),
               validator: (v) =>
                   (v == null || v.isEmpty) ? context.l10n.nicRequired : null,
@@ -158,8 +156,7 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: context.l10n.phoneNumber,
-                prefixIcon: const Icon(Icons.phone),
-                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.phone_rounded),
               ),
               validator: (v) =>
                   (v == null || v.isEmpty) ? context.l10n.phoneRequired : null,
@@ -169,14 +166,7 @@ class _CustomerSignupFormState extends State<CustomerSignupForm> {
           // Register button
           ElevatedButton.icon(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.indigo,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            icon: const Icon(Icons.person_add, color: Colors.white),
+            icon: const Icon(Icons.person_add_rounded),
             label: Text(
               context.l10n.registerAsCustomer,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),

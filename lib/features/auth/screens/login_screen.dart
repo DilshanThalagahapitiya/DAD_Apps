@@ -4,14 +4,14 @@
 // User login with email + password or Google Sign-In.
 // ============================================================
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/auth/google_auth_service.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         debugPrint('✅ [LoginScreen] Google sign-in successful, navigating to Home');
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const StartupScreen()),
           (route) => false,
         );
       } else {
@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (success) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const StartupScreen()),
         (route) => false,
       );
     } else {
@@ -119,25 +119,33 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      // Back button so users can return to the Landing screen
-      // (shown automatically when this screen was pushed on the stack)
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-      ),
-      body: SafeArea(
-        child: Center(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              AppBar(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+              ),
+              Expanded(
+                child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
             child: Container(
               padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppRadius.sheet),
               ),
               child: Form(
                 key: _formKey,
@@ -153,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.indigo,
+                          color: scheme.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Text(
@@ -170,10 +178,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? context.l10n.hireADriver
                             : context.l10n.loginTitle(AppConstants.appName),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
+                          color: scheme.primary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -194,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           side: BorderSide(color: Colors.grey.shade300),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppRadius.button),
                           ),
                         ),
                         icon: _googleLoading
@@ -236,7 +244,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: context.l10n.email,
                           prefixIcon: const Icon(Icons.email_outlined),
-                          border: const OutlineInputBorder(),
                         ),
                         validator: (v) => v == null || v.isEmpty
                             ? context.l10n.pleaseEnterEmail
@@ -253,12 +260,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         onFieldSubmitted: (_) => _login(),
                         decoration: InputDecoration(
                           labelText: context.l10n.password,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
                             icon: Icon(_obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off),
+                                ? Icons.visibility_rounded
+                                : Icons.visibility_off_rounded),
                             onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword),
                           ),
@@ -293,13 +299,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Login button
                       ElevatedButton(
                         onPressed: auth.isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: Colors.indigo,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
                         child: auth.isLoading
                             ? const SizedBox(
                                 width: 22,
@@ -339,6 +338,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+          ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

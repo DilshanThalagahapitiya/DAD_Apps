@@ -9,6 +9,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ride_status_chip.dart';
+import '../../../core/widgets/fare_breakdown_card.dart';
 import 'ride_edit_screen.dart';
 
 class MyRidesScreen extends StatefulWidget {
@@ -79,29 +82,19 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
     return dt == null ? d : dt.toLocal().toString().replaceRange(16, 19, '');
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'ASSIGNED': return Colors.amber;
-      case 'UPCOMING': return Colors.indigo;
-      case 'ONGOING': return Colors.green;
-      case 'COMPLETED': return Colors.grey;
-      default: return Colors.blueGrey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isRider = widget.role == 'rider';
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.indigo,
         title: Text(isRider ? context.l10n.myRidesTicketsRider : context.l10n.myRidesTickets),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                  Icon(Icons.error_outline_rounded, size: 48, color: context.statusColors.danger),
                   const SizedBox(height: 12),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -112,7 +105,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                 ]))
               : _filteredRides.isEmpty
                   ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Icon(Icons.inbox, size: 64, color: Colors.grey),
+                      Icon(Icons.inbox_rounded, size: 64, color: scheme.onSurfaceVariant),
                       const SizedBox(height: 12),
                       const Text('No rides in this section'),
                       const SizedBox(height: 4),
@@ -121,7 +114,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                             ? 'When admin assigns you a ride, it will appear here.'
                             : 'No ${widget.statusFilter!.toLowerCase().replaceAll('_', ' ')} rides yet.',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.grey),
+                        style: TextStyle(color: scheme.onSurfaceVariant),
                       ),
                     ]))
                   : RefreshIndicator(
@@ -148,102 +141,66 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                                     );
                                     _fetchRides();
                                   },
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.card),
                             child: Card(
-                              elevation: 2,
                             margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             child: Padding(
-                              padding: const EdgeInsets.all(14),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: _statusColor(status).withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          status,
-                                          style: TextStyle(
-                                            color: _statusColor(status),
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
+                                      RideStatusChip(status: status),
                                       Text(
                                         _formatDate(ride['startTime'] ?? ''),
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
                                   Row(children: [
-                                    const Icon(Icons.trip_origin, size: 18, color: Colors.green),
+                                    Icon(Icons.trip_origin_rounded, size: 18, color: context.statusColors.success),
                                     const SizedBox(width: 6),
                                     Expanded(child: Text('${ride['pickupLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600))),
                                   ]),
                                   const SizedBox(height: 4),
                                   Row(children: [
-                                    const Icon(Icons.flag, size: 18, color: Colors.red),
+                                    Icon(Icons.flag_rounded, size: 18, color: context.statusColors.danger),
                                     const SizedBox(width: 6),
                                     Expanded(child: Text('${ride['dropLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600))),
                                   ]),
                                   const SizedBox(height: 10),
-                                  Text('👤 Customer: ${ride['customerName'] ?? '-'} • ${ride['customerNumber'] ?? ''}', style: const TextStyle(fontSize: 13)),
-                                  Text('🚘 ${ride['vehicleType'] ?? '-'} • ⚙️ ${ride['transmission'] ?? '-'}', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                  Text('Customer: ${ride['customerName'] ?? '-'} • ${ride['customerNumber'] ?? ''}', style: const TextStyle(fontSize: 13)),
+                                  Text('${ride['vehicleType'] ?? '-'} • ${ride['transmission'] ?? '-'}', style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
                                   // Show fare amount directly on the list for completed rides
                                   if (status == 'COMPLETED' && (ride['totalFare'] ?? 0) > 0) ...[
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF1F2937), Color(0xFF374151)],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(context.l10n.totalFare,
-                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                                          Text('Rs. ${ride['totalFare']}',
-                                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
-                                        ],
-                                      ),
-                                    ),
+                                    const SizedBox(height: 10),
+                                    FareBreakdownCard(totalLabel: context.l10n.totalFare, totalFare: ride['totalFare']),
                                   ],
                                   // Show other side's status
                                   if (isRider) ...[
-                                    Text(context.l10n.driverLabel(ride['driver']?['fullName'] ?? 'N/A'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                    Text(context.l10n.driverLabel(ride['driver']?['fullName'] ?? 'N/A'), style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
                                     if (ride['driverCancelled'] == true)
-                                      Text(context.l10n.driverCancelled, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600))
+                                      Text(context.l10n.driverCancelled, style: TextStyle(fontSize: 12, color: context.statusColors.danger, fontWeight: FontWeight.w600))
                                     else if (ride['driverAccepted'] == true)
-                                      Text(context.l10n.driverAccepted, style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600))
+                                      Text(context.l10n.driverAccepted, style: TextStyle(fontSize: 12, color: context.statusColors.success, fontWeight: FontWeight.w600))
                                     else if (status == 'ASSIGNED')
-                                      Text(context.l10n.driverNotAccepted, style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
+                                      Text(context.l10n.driverNotAccepted, style: TextStyle(fontSize: 12, color: context.statusColors.warning, fontWeight: FontWeight.w600)),
                                   ] else ...[
-                                    Text(context.l10n.riderLabel(ride['rider']?['fullName'] ?? 'N/A'), style: const TextStyle(fontSize: 13, color: Colors.grey)),
+                                    Text(context.l10n.riderLabel(ride['rider']?['fullName'] ?? 'N/A'), style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant)),
                                     if (ride['riderCancelled'] == true)
-                                      Text(context.l10n.riderCancelled, style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600))
+                                      Text(context.l10n.riderCancelled, style: TextStyle(fontSize: 12, color: context.statusColors.danger, fontWeight: FontWeight.w600))
                                     else if (ride['riderAccepted'] == true)
-                                      Text(context.l10n.riderAccepted, style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600))
+                                      Text(context.l10n.riderAccepted, style: TextStyle(fontSize: 12, color: context.statusColors.success, fontWeight: FontWeight.w600))
                                     else if (status == 'ASSIGNED')
-                                      Text(context.l10n.riderNotAccepted, style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600)),
+                                      Text(context.l10n.riderNotAccepted, style: TextStyle(fontSize: 12, color: context.statusColors.warning, fontWeight: FontWeight.w600)),
                                   ],
                                   if (ride['specialNote'] != null && ride['specialNote'].toString().isNotEmpty)
                                     Padding(
                                       padding: const EdgeInsets.only(top: 6),
-                                      child: Text('📝 ${ride['specialNote']}', style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                                      child: Text('${ride['specialNote']}', style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
                                     ),
 
                                   // Accept/Cancel buttons for ASSIGNED tickets.
@@ -256,14 +213,13 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                                         width: double.infinity,
                                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                         decoration: BoxDecoration(
-                                          color: Colors.green.shade50,
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.green.shade300),
+                                          color: context.statusColors.successContainer,
+                                          borderRadius: BorderRadius.circular(AppRadius.card - 8),
                                         ),
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                                            Icon(Icons.check_circle_rounded, color: context.statusColors.success, size: 18),
                                             const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
@@ -271,7 +227,7 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                                                     ? context.l10n.youAcceptedWaitingDriver
                                                     : context.l10n.youAcceptedWaitingRider,
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600, fontSize: 13),
+                                                style: TextStyle(color: context.statusColors.success, fontWeight: FontWeight.w600, fontSize: 13),
                                               ),
                                             ),
                                           ],
@@ -280,9 +236,9 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                                     else ...[
                                       Row(children: [
                                         Expanded(
-                                          child: ElevatedButton(
+                                          child: FilledButton(
                                             onPressed: () => _action(ride['id'], 'ACCEPT'),
-                                            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                                            style: FilledButton.styleFrom(backgroundColor: context.statusColors.success),
                                             child: Text(context.l10n.acceptTicket),
                                           ),
                                         ),
@@ -291,8 +247,8 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                                           child: OutlinedButton(
                                             onPressed: () => _action(ride['id'], 'CANCEL'),
                                             style: OutlinedButton.styleFrom(
-                                              foregroundColor: Colors.red,
-                                              side: const BorderSide(color: Colors.red),
+                                              foregroundColor: context.statusColors.danger,
+                                              side: BorderSide(color: context.statusColors.danger),
                                             ),
                                             child: Text(context.l10n.cancel),
                                           ),

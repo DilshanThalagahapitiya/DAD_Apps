@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/localization/l10n_ext.dart';
+import '../../../core/theme/app_theme.dart';
 
 class MapLocationPicker extends StatefulWidget {
   final String? initialAddress;
@@ -108,23 +109,21 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.indigo,
         title: TextField(
           controller: _searchCtrl,
           enabled: widget.enabled,
           decoration: InputDecoration(
             hintText: context.l10n.typeLocationHint,
-            hintStyle: const TextStyle(color: Colors.white70),
             border: InputBorder.none,
           ),
         ),
         actions: [
           TextButton(
             onPressed: widget.enabled ? _confirm : null,
-            child: Text(context.l10n.useThis,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(context.l10n.useThis, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -136,10 +135,10 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
             // Use current location (geolocator, no Google Maps)
             OutlinedButton.icon(
               onPressed: widget.enabled ? _goToCurrentLocation : null,
-              icon: const Icon(Icons.my_location, color: Colors.indigo),
+              icon: Icon(Icons.my_location_rounded, color: scheme.primary),
               label: Text(context.l10n.useMyCurrentLocation),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.indigo,
+                foregroundColor: scheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
@@ -148,14 +147,13 @@ class _MapLocationPickerState extends State<MapLocationPicker> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.indigo.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.indigo.shade200),
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppRadius.button),
               ),
               child: Text(
                 context.l10n.mapHint,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: Colors.indigo),
+                style: TextStyle(fontSize: 13, color: scheme.primary),
               ),
             ),
           ],

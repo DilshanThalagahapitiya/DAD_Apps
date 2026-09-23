@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -63,9 +64,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Profile completed! You can now hire drivers.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Profile completed! You can now hire drivers.'),
+          backgroundColor: context.statusColors.success,
         ),
       );
       Navigator.pop(context);
@@ -81,42 +82,49 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      appBar: AppBar(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(children: [
+      AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         title: Text(context.l10n.completeProfile,
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+      Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.sheet),
             ),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.fact_check_outlined,
-                      color: Colors.indigo, size: 48),
+                  Icon(Icons.fact_check_rounded, color: scheme.primary, size: 48),
                   const SizedBox(height: 12),
                   Text(
                     context.l10n.completeYourProfile,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -128,20 +136,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(height: 24),
 
                   // Last name
-                  _field(_lastName, context.l10n.lastName, Icons.person_outline),
+                  _field(_lastName, context.l10n.lastName, Icons.person_outline_rounded),
                   const SizedBox(height: 12),
 
                   // Email
-                  _field(_email, context.l10n.emailAddress, Icons.email,
+                  _field(_email, context.l10n.emailAddress, Icons.email_rounded,
                       email: true),
                   const SizedBox(height: 12),
 
                   // Location
-                  _field(_location, context.l10n.locationGoogleMaps, Icons.map),
+                  _field(_location, context.l10n.locationGoogleMaps, Icons.map_rounded),
                   const SizedBox(height: 12),
 
                   // Vehicle type
-                  _field(_vehicleType, context.l10n.vehicleType, Icons.directions_car),
+                  _field(_vehicleType, context.l10n.vehicleType, Icons.directions_car_rounded),
                   const SizedBox(height: 12),
 
                   // Transmission
@@ -149,8 +157,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     initialValue: _transmission,
                     decoration: InputDecoration(
                       labelText: context.l10n.transmissionType,
-                      prefixIcon: const Icon(Icons.settings),
-                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.settings_rounded),
                     ),
                     items: [
                       DropdownMenuItem(value: 'AUTO', child: Text(context.l10n.auto)),
@@ -161,19 +168,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   const SizedBox(height: 12),
 
                   // Vehicle number
-                  _field(_vehicleNumber, context.l10n.vehicleNumber, Icons.confirmation_number),
+                  _field(_vehicleNumber, context.l10n.vehicleNumber, Icons.confirmation_number_rounded),
                   const SizedBox(height: 24),
 
                   // Save button
                   ElevatedButton.icon(
                     onPressed: _saving ? null : _save,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: Colors.indigo,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
                     icon: _saving
                         ? const SizedBox(
                             width: 20,
@@ -183,17 +183,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.check, color: Colors.white),
-                    label: Text(
-                      _saving ? context.l10n.saving : context.l10n.saveProfile,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
+                        : const Icon(Icons.check_rounded),
+                    label: Text(_saving ? context.l10n.saving : context.l10n.saveProfile),
                   ),
                 ],
               ),
             ),
           ),
+      )),
+          ]),
         ),
       ),
     );
@@ -207,7 +205,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
       ),
       validator: (v) => (v == null || v.isEmpty) ? context.l10n.required : null,
     );

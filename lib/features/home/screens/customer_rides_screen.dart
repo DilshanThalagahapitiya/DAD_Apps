@@ -5,15 +5,21 @@
 // Completed rides display the total fare + full fare breakdown
 // (base fare, distance, waiting) so the customer knows exactly
 // how the amount was calculated.
+// When `embedded` is true, this renders as the "My Rides" tab
+// inside CustomerShell (no own Scaffold/AppBar).
 // ============================================================
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ride_status_chip.dart';
+import '../../../core/widgets/fare_breakdown_card.dart';
 
 class CustomerRidesScreen extends StatefulWidget {
-  const CustomerRidesScreen({super.key});
+  final bool embedded;
+  const CustomerRidesScreen({super.key, this.embedded = false});
 
   @override
   State<CustomerRidesScreen> createState() => _CustomerRidesScreenState();
@@ -52,28 +58,6 @@ class _CustomerRidesScreenState extends State<CustomerRidesScreen> {
     return '$date  $time';
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'PENDING_REQUEST': return Colors.orange;
-      case 'ASSIGNED': return Colors.amber.shade700;
-      case 'UPCOMING': return Colors.indigo;
-      case 'ONGOING': return Colors.green;
-      case 'COMPLETED': return Colors.blueGrey;
-      default: return Colors.grey;
-    }
-  }
-
-  IconData _statusIcon(String status) {
-    switch (status) {
-      case 'PENDING_REQUEST': return Icons.hourglass_top;
-      case 'ASSIGNED': return Icons.event_available;
-      case 'UPCOMING': return Icons.event;
-      case 'ONGOING': return Icons.directions_car;
-      case 'COMPLETED': return Icons.check_circle_outline;
-      default: return Icons.info_outline;
-    }
-  }
-
   // Parse the fare breakdown JSON stored on the ride
   Map<String, dynamic>? _parseBreakdown(dynamic raw) {
     if (raw == null || raw.toString().isEmpty) return null;
@@ -87,206 +71,158 @@ class _CustomerRidesScreenState extends State<CustomerRidesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.indigo,
-        title: Text(context.l10n.myRides),
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(_error, textAlign: TextAlign.center),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(onPressed: _fetchRides, child: Text(context.l10n.retry)),
-                ]))
-              : _rides.isEmpty
-                  ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      const Icon(Icons.inbox, size: 64, color: Colors.grey),
-                      const SizedBox(height: 12),
-                      Text(context.l10n.noRideRequests),
-                      const SizedBox(height: 4),
-                      Text(
-                        context.l10n.requestToGetStarted,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.grey),
-                      ),
-                    ]))
-                  : RefreshIndicator(
-                      onRefresh: _fetchRides,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _rides.length,
-                        itemBuilder: (ctx, i) {
-                          final ride = _rides[i] as Map<String, dynamic>;
-                          final status = ride['status']?.toString() ?? '';
-                          final statusColor = _statusColor(status);
-                          final totalFare = ride['totalFare'];
-                          final breakdown = _parseBreakdown(ride['fareBreakdown']);
+    final scheme = Theme.of(context).colorScheme;
 
-                          return Card(
-                            elevation: 2,
-                            margin: const EdgeInsets.only(bottom: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Status header row
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: statusColor.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Row(children: [
-                                          Icon(_statusIcon(status), size: 14, color: statusColor),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            status.replaceAll('_', ' '),
-                                            style: TextStyle(
-                                              color: statusColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ]),
-                                      ),
-                                      Text(
-                                        _formatDate(ride['startTime']?.toString() ?? ride['createdAt']?.toString() ?? ''),
-                                        style: const TextStyle(fontSize: 11, color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 10),
+    Widget body;
+    if (_loading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (_error.isNotEmpty) {
+      body = Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.error_outline_rounded, size: 48, color: context.statusColors.danger),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(_error, textAlign: TextAlign.center),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: _fetchRides, child: Text(context.l10n.retry)),
+        ]),
+      );
+    } else if (_rides.isEmpty) {
+      body = Center(
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.inbox_rounded, size: 64, color: scheme.onSurfaceVariant),
+          const SizedBox(height: 12),
+          Text(context.l10n.noRideRequests),
+          const SizedBox(height: 4),
+          Text(
+            context.l10n.requestToGetStarted,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: scheme.onSurfaceVariant),
+          ),
+        ]),
+      );
+    } else {
+      body = RefreshIndicator(
+        onRefresh: _fetchRides,
+        child: ListView.builder(
+          padding: EdgeInsets.fromLTRB(20, widget.embedded ? 4 : 16, 20, 16),
+          itemCount: _rides.length,
+          itemBuilder: (ctx, i) {
+            final ride = _rides[i] as Map<String, dynamic>;
+            final status = ride['status']?.toString() ?? '';
+            final totalFare = ride['totalFare'];
+            final breakdown = _parseBreakdown(ride['fareBreakdown']);
 
-                                  // Pickup → Drop
-                                  Row(children: [
-                                    const Icon(Icons.trip_origin, size: 18, color: Colors.green),
-                                    const SizedBox(width: 6),
-                                    Expanded(child: Text('${ride['pickupLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                                  ]),
-                                  const SizedBox(height: 4),
-                                  Row(children: [
-                                    const Icon(Icons.flag, size: 18, color: Colors.red),
-                                    const SizedBox(width: 6),
-                                    Expanded(child: Text('${ride['dropLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                                  ]),
-                                  const SizedBox(height: 8),
-
-                                  // Vehicle info
-                                  Text('🚘 ${ride['vehicleType'] ?? '-'} • ⚙️ ${ride['transmission'] ?? '-'}',
-                                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                  if (ride['specialNote'] != null && ride['specialNote'].toString().isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text('📝 ${ride['specialNote']}',
-                                          style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
-                                    ),
-
-                                  // Driver & Rider assigned
-                                  if ((ride['driver'] as Map?) != null ||
-                                      (ride['rider'] as Map?) != null) ...[
-                                    const SizedBox(height: 8),
-                                    Row(children: [
-                                      if ((ride['driver'] as Map?) != null) ...[
-                                        Icon(Icons.person, size: 15, color: Colors.indigo.shade300),
-                                        const SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text('${(ride['driver'] as Map?)?['fullName'] ?? '-'}',
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 12, color: Colors.indigo)),
-                                        ),
-                                        const SizedBox(width: 10),
-                                      ],
-                                      if ((ride['rider'] as Map?) != null) ...[
-                                        Icon(Icons.person_pin, size: 15, color: Colors.orange.shade300),
-                                        const SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text('${(ride['rider'] as Map?)?['fullName'] ?? '-'}',
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontSize: 12, color: Colors.orange)),
-                                        ),
-                                      ],
-                                    ]),
-                                  ],
-
-                                  // ========================================
-                                  // 💵 FARE SUMMARY — for completed rides
-                                  // ========================================
-                                  if (status == 'COMPLETED' && totalFare != null) ...[
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(14),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [Color(0xFF1F2937), Color(0xFF374151)],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: const Offset(0, 2))],
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: [
-                                          Text(context.l10n.fareSummary,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.amber)),
-                                          const SizedBox(height: 8),
-                                          if (breakdown != null) ...[
-                                            _fareRow(context.l10n.baseFare, 'Rs. ${breakdown['baseFare'] ?? 0}'),
-                                            _fareRow(
-                                              context.l10n.distanceKm('${breakdown['distanceKm'] ?? 0}'),
-                                              'Rs. ${breakdown['distanceCost'] ?? 0}',
-                                            ),
-                                            if ((breakdown['waitingMin'] ?? 0) > 0)
-                                              _fareRow(
-                                                context.l10n.waitingMin('${breakdown['waitingMin']}'),
-                                                'Rs. ${breakdown['waitingCost'] ?? 0}',
-                                              ),
-                                            const Divider(color: Colors.white24, height: 16),
-                                          ],
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(context.l10n.totalAmount,
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white)),
-                                              Text('Rs. $totalFare',
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.amber)),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+            return Card(
+              margin: const EdgeInsets.only(bottom: 14),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        RideStatusChip(status: status),
+                        Text(
+                          _formatDate(ride['startTime']?.toString() ?? ride['createdAt']?.toString() ?? ''),
+                          style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-    );
-  }
+                    const SizedBox(height: 12),
 
-  Widget _fareRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-            Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-          ],
+                    Row(children: [
+                      Icon(Icons.trip_origin_rounded, size: 18, color: context.statusColors.success),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('${ride['pickupLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                    ]),
+                    const SizedBox(height: 4),
+                    Row(children: [
+                      Icon(Icons.flag_rounded, size: 18, color: context.statusColors.danger),
+                      const SizedBox(width: 6),
+                      Expanded(child: Text('${ride['dropLocation'] ?? '-'}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+                    ]),
+                    const SizedBox(height: 8),
+
+                    Text('${ride['vehicleType'] ?? '-'} • ${ride['transmission'] ?? '-'}',
+                        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant)),
+                    if (ride['specialNote'] != null && ride['specialNote'].toString().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text('${ride['specialNote']}',
+                            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                      ),
+
+                    if ((ride['driver'] as Map?) != null || (ride['rider'] as Map?) != null) ...[
+                      const SizedBox(height: 8),
+                      Row(children: [
+                        if ((ride['driver'] as Map?) != null) ...[
+                          Icon(Icons.person_rounded, size: 15, color: scheme.primary),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text('${(ride['driver'] as Map?)?['fullName'] ?? '-'}',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 12, color: scheme.primary)),
+                          ),
+                          const SizedBox(width: 10),
+                        ],
+                        if ((ride['rider'] as Map?) != null) ...[
+                          Icon(Icons.person_pin_rounded, size: 15, color: context.statusColors.warning),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text('${(ride['rider'] as Map?)?['fullName'] ?? '-'}',
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 12, color: context.statusColors.warning)),
+                          ),
+                        ],
+                      ]),
+                    ],
+
+                    if (status == 'COMPLETED' && totalFare != null) ...[
+                      const SizedBox(height: 14),
+                      FareBreakdownCard(
+                        title: context.l10n.fareSummary,
+                        totalLabel: context.l10n.totalAmount,
+                        totalFare: totalFare,
+                        rows: [
+                          if (breakdown != null) ...[
+                            (context.l10n.baseFare, 'Rs. ${breakdown['baseFare'] ?? 0}'),
+                            (context.l10n.distanceKm('${breakdown['distanceKm'] ?? 0}'), 'Rs. ${breakdown['distanceCost'] ?? 0}'),
+                            if ((breakdown['waitingMin'] ?? 0) > 0)
+                              (context.l10n.waitingMin('${breakdown['waitingMin']}'), 'Rs. ${breakdown['waitingCost'] ?? 0}'),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       );
+    }
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+            child: Text(context.l10n.myRides,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
+          ),
+          Expanded(child: body),
+        ],
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.myRides)),
+      body: body,
+    );
+  }
 }

@@ -14,6 +14,8 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/fare_breakdown_card.dart';
 import '../widgets/map_location_picker.dart';
 
 class RideEditScreen extends StatefulWidget {
@@ -149,12 +151,12 @@ class _RideEditScreenState extends State<RideEditScreen> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res['message'] ?? context.l10n.done), backgroundColor: Colors.indigo),
+        SnackBar(content: Text(res['message'] ?? context.l10n.done)),
       );
     } catch (e) {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: Colors.red),
+        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: context.statusColors.danger),
       );
     }
   }
@@ -177,7 +179,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.cameraError(e.toString())), backgroundColor: Colors.red),
+        SnackBar(content: Text(context.l10n.cameraError(e.toString())), backgroundColor: context.statusColors.danger),
       );
     }
   }
@@ -213,17 +215,6 @@ class _RideEditScreenState extends State<RideEditScreen> {
       '${((s % 3600) ~/ 60).toString().padLeft(2, '0')}:'
       '${(s % 60).toString().padLeft(2, '0')}';
 
-  Widget _fareRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 13, color: Colors.white70)),
-            Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-          ],
-        ),
-      );
-
   Widget _detail(String label, String value) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
         child: Row(
@@ -245,7 +236,6 @@ class _RideEditScreenState extends State<RideEditScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.indigo,
         title: Text(isRider ? context.l10n.rideDetailsViewOnly : context.l10n.rideStatus(_status)),
       ),
       body: SingleChildScrollView(
@@ -254,21 +244,18 @@ class _RideEditScreenState extends State<RideEditScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Summary card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.indigo.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.indigo.shade200),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(children: [
+                  Text('🚗 ${ride['driver']?['fullName'] ?? 'Driver'}',
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('🙋 ${ride['rider']?['fullName'] ?? 'Rider'}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('🚘 ${ride['vehicleType'] ?? '-'} • ⚙️ ${ride['transmission'] ?? '-'}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ]),
               ),
-              child: Column(children: [
-                Text('🚗 ${ride['driver']?['fullName'] ?? 'Driver'}',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text('🙋 ${ride['rider']?['fullName'] ?? 'Rider'}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                Text('🚘 ${ride['vehicleType'] ?? '-'} • ⚙️ ${ride['transmission'] ?? '-'}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              ]),
             ),
             const SizedBox(height: 12),
 
@@ -279,8 +266,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
               enabled: !locked,
               decoration: InputDecoration(
                 labelText: context.l10n.pickupLocationLabel,
-                prefixIcon: const Icon(Icons.trip_origin, color: Colors.green),
-                border: const OutlineInputBorder(),
+                prefixIcon: Icon(Icons.trip_origin_rounded, color: context.statusColors.success),
               ),
             ),
             const SizedBox(height: 8),
@@ -299,7 +285,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text('📍 ${_pickupLat!.toStringAsFixed(6)}, ${_pickupLng!.toStringAsFixed(6)}',
-                    style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w600)),
+                    style: TextStyle(fontSize: 12, color: context.statusColors.success, fontWeight: FontWeight.w600)),
               ),
             const SizedBox(height: 12),
 
@@ -310,8 +296,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
               enabled: !locked,
               decoration: InputDecoration(
                 labelText: context.l10n.dropLocationLabel,
-                prefixIcon: const Icon(Icons.flag, color: Colors.red),
-                border: const OutlineInputBorder(),
+                prefixIcon: Icon(Icons.flag_rounded, color: context.statusColors.danger),
               ),
             ),
             const SizedBox(height: 8),
@@ -328,39 +313,35 @@ class _RideEditScreenState extends State<RideEditScreen> {
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text('📍 ${_dropLat!.toStringAsFixed(6)}, ${_dropLng!.toStringAsFixed(6)}',
-                    style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600)),
+                    style: TextStyle(fontSize: 12, color: context.statusColors.danger, fontWeight: FontWeight.w600)),
               ),
             const SizedBox(height: 12),
 
             // Other details (read-only)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade300),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(children: [
+                  _detail(context.l10n.customerLabel, '${ride['customerName'] ?? '-'} • ${ride['customerNumber'] ?? ''}'),
+                  _detail(context.l10n.notesLabel, '${ride['specialNote'] ?? '-'}'),
+                  _detail(context.l10n.scheduledLabel, '${ride['startTime'] ?? '-'}'),
+                  _detail(context.l10n.createdLabel, '${ride['createdAt'] ?? '-'}'),
+                ]),
               ),
-              child: Column(children: [
-                _detail(context.l10n.customerLabel, '${ride['customerName'] ?? '-'} • ${ride['customerNumber'] ?? ''}'),
-                _detail(context.l10n.notesLabel, '${ride['specialNote'] ?? '-'}'),
-                _detail(context.l10n.scheduledLabel, '${ride['startTime'] ?? '-'}'),
-                _detail(context.l10n.createdLabel, '${ride['createdAt'] ?? '-'}'),
-              ]),
             ),
             const SizedBox(height: 16),
 
             // Waiting history — shown to BOTH
             if (_intervals.isNotEmpty || ((ride['waitingTotal'] ?? 0) as num) > 0) ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.orange.shade300),
+                  color: context.statusColors.warningContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Column(children: [
                   Text(context.l10n.waitingHistory,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: context.statusColors.warning)),
                   const SizedBox(height: 6),
                   for (var i = 0; i < _intervals.length; i++)
                     Padding(
@@ -386,7 +367,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
                       children: [
                         Text(context.l10n.totalWaiting, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                         Text(_fmt(int.tryParse('${ride['waitingTotal'] ?? 0}') ?? 0),
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: context.statusColors.warning)),
                       ],
                     ),
                   ],
@@ -400,9 +381,8 @@ class _RideEditScreenState extends State<RideEditScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber),
+                  color: context.statusColors.warningContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Column(children: [
                   Text(context.l10n.waitingTimer('${_intervals.length + 1}'),
@@ -410,7 +390,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
                   const SizedBox(height: 6),
                   Text(
                     _fmt(_waitingSeconds),
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: context.statusColors.warning),
                   ),
                 ]),
               ),
@@ -420,17 +400,16 @@ class _RideEditScreenState extends State<RideEditScreen> {
             // ---- DRIVER ONLY: ODOMETER SECTION (required for start/complete) ----
             if (!isRider) ...[
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade300),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(context.l10n.odometerReadings,
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                     const SizedBox(height: 8),
 
                     // START odometer
@@ -440,20 +419,19 @@ class _RideEditScreenState extends State<RideEditScreen> {
                       enabled: !locked,
                       decoration: InputDecoration(
                         labelText: context.l10n.startOdometer,
-                        prefixIcon: const Icon(Icons.speed, color: Colors.green),
-                        border: const OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.speed_rounded, color: context.statusColors.success),
                       ),
                     ),
                     const SizedBox(height: 6),
                     OutlinedButton.icon(
                       onPressed: locked ? null : () => _captureOdoPhoto(isStart: true),
-                      icon: const Icon(Icons.photo_camera, color: Colors.green),
+                      icon: Icon(Icons.photo_camera_rounded, color: context.statusColors.success),
                       label: Text(_odoStartImage != null
                           ? context.l10n.startOdoPhotoDone
                           : context.l10n.captureStartOdoPhoto),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        foregroundColor: context.statusColors.success,
+                        side: BorderSide(color: context.statusColors.success),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -465,20 +443,19 @@ class _RideEditScreenState extends State<RideEditScreen> {
                       enabled: !locked,
                       decoration: InputDecoration(
                         labelText: context.l10n.endOdometer,
-                        prefixIcon: const Icon(Icons.speed, color: Colors.red),
-                        border: const OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.speed_rounded, color: context.statusColors.danger),
                       ),
                     ),
                     const SizedBox(height: 6),
                     OutlinedButton.icon(
                       onPressed: locked ? null : () => _captureOdoPhoto(isStart: false),
-                      icon: const Icon(Icons.photo_camera, color: Colors.red),
+                      icon: Icon(Icons.photo_camera_rounded, color: context.statusColors.danger),
                       label: Text(_odoEndImage != null
                           ? context.l10n.endOdoPhotoDone
                           : context.l10n.captureEndOdoPhoto),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        foregroundColor: context.statusColors.danger,
+                        side: BorderSide(color: context.statusColors.danger),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -486,10 +463,10 @@ class _RideEditScreenState extends State<RideEditScreen> {
                     // Distance preview
                     if (odoS != null && odoE != null && odoE >= odoS) ...[
                       Text('📏 Distance: ${odoE - odoS} km',
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary)),
                     ] else if (odoS != null && odoE != null && odoE < odoS) ...[
                       Text('⚠️ End odometer must be >= Start',
-                          style: const TextStyle(color: Colors.red, fontSize: 12)),
+                          style: TextStyle(color: context.statusColors.danger, fontSize: 12)),
                     ],
 
                     const SizedBox(height: 8),
@@ -499,11 +476,8 @@ class _RideEditScreenState extends State<RideEditScreen> {
                       onPressed: _saving || locked
                           ? null
                           : () => _workflowAction('SAVE'),
-                      icon: const Icon(Icons.save, size: 18),
+                      icon: const Icon(Icons.save_rounded, size: 18),
                       label: Text(context.l10n.saveForPortal),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
                     ),
                   ],
                 ),
@@ -517,35 +491,26 @@ class _RideEditScreenState extends State<RideEditScreen> {
               if (_status == 'UPCOMING' || _status == 'ASSIGNED') ...[
                 if (_waiting) ...[
                   // Waiting timer is running pre-start → show only Start Ride (full width)
-                  ElevatedButton(
+                  FilledButton(
                     onPressed: _saving ? null : () => _workflowAction('START'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
+                    style: FilledButton.styleFrom(backgroundColor: context.statusColors.success),
                     child: Text(context.l10n.startRide),
                   ),
                 ] else ...[
                   // Normal pre-start → show Waiting + Start Ride
                   Row(children: [
                     Expanded(
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: _saving ? null : () => _workflowAction('WAITING'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
+                        style: FilledButton.styleFrom(backgroundColor: context.statusColors.warning),
                         child: Text(context.l10n.waitingBtn),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
+                      child: FilledButton(
                         onPressed: _saving ? null : () => _workflowAction('START'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
+                        style: FilledButton.styleFrom(backgroundColor: context.statusColors.success),
                         child: Text(context.l10n.startRide),
                       ),
                     ),
@@ -555,25 +520,21 @@ class _RideEditScreenState extends State<RideEditScreen> {
               if (_status == 'ONGOING') ...[
                 Row(children: [
                   Expanded(
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _saving
                           ? null
                           : () => _workflowAction(_waiting ? 'CONTINUE' : 'WAITING'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _waiting ? Colors.orange : Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _waiting ? context.statusColors.warning : context.statusColors.success,
                       ),
                       child: Text(_waiting ? context.l10n.continueRide : context.l10n.waitingBtn),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _saving ? null : () => _workflowAction('COMPLETE'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
+                      style: FilledButton.styleFrom(backgroundColor: context.statusColors.danger),
                       child: Text(context.l10n.completeRide),
                     ),
                   ),
@@ -586,7 +547,7 @@ class _RideEditScreenState extends State<RideEditScreen> {
               const SizedBox(height: 8),
               Center(
                 child: Column(children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 48),
+                  Icon(Icons.check_circle_rounded, color: context.statusColors.success, size: 48),
                   const SizedBox(height: 8),
                   Text(context.l10n.rideCompletedLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
                 ]),
@@ -595,64 +556,31 @@ class _RideEditScreenState extends State<RideEditScreen> {
 
               // 💵 Total Fare Summary (driver & rider both see it)
               if (ride['totalFare'] != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1F2937), Color(0xFF374151)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8, offset: const Offset(0, 3))],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(context.l10n.fareSummary,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.amber)),
-                      const SizedBox(height: 12),
-                      ...(() {
-                        // Try to parse the fare breakdown JSON
-                        Map<String, dynamic>? b;
-                        try {
-                          final raw = ride['fareBreakdown'];
-                          if (raw is String && raw.isNotEmpty) {
-                            final decoded = jsonDecode(raw);
-                            if (decoded is Map<String, dynamic>) b = decoded;
-                          }
-                        } catch (_) {}
-                        if (b != null) {
-                          return [
-                            _fareRow(context.l10n.baseFare, 'Rs. ${b['baseFare'] ?? 0}'),
-                            _fareRow(context.l10n.distanceKm('${b['distanceKm'] ?? 0}'), 'Rs. ${b['distanceCost'] ?? 0}'),
-                            if ((b['waitingMin'] ?? 0) > 0)
-                              _fareRow(context.l10n.waitingMin('${b['waitingMin']}'), 'Rs. ${b['waitingCost'] ?? 0}'),
-                            const Divider(color: Colors.white24, height: 20),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(context.l10n.totalFare, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                                Text('Rs. ${ride['totalFare']}',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.amber)),
-                              ],
-                            ),
-                          ];
-                        }
-                        return [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(context.l10n.totalFare, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
-                              Text('Rs. ${ride['totalFare']}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.amber)),
-                            ],
-                          ),
-                        ];
-                      })(),
+                (() {
+                  // Try to parse the fare breakdown JSON
+                  Map<String, dynamic>? b;
+                  try {
+                    final raw = ride['fareBreakdown'];
+                    if (raw is String && raw.isNotEmpty) {
+                      final decoded = jsonDecode(raw);
+                      if (decoded is Map<String, dynamic>) b = decoded;
+                    }
+                  } catch (_) {}
+                  final rows = <(String, String)>[
+                    if (b != null) ...[
+                      (context.l10n.baseFare, 'Rs. ${b['baseFare'] ?? 0}'),
+                      (context.l10n.distanceKm('${b['distanceKm'] ?? 0}'), 'Rs. ${b['distanceCost'] ?? 0}'),
+                      if ((b['waitingMin'] ?? 0) > 0)
+                        (context.l10n.waitingMin('${b['waitingMin']}'), 'Rs. ${b['waitingCost'] ?? 0}'),
                     ],
-                  ),
-                ),
+                  ];
+                  return FareBreakdownCard(
+                    title: context.l10n.fareSummary,
+                    totalLabel: context.l10n.totalFare,
+                    totalFare: ride['totalFare'],
+                    rows: rows,
+                  );
+                })(),
               ],
             ],
           ],

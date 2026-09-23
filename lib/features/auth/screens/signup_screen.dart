@@ -12,7 +12,8 @@ import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/widgets/language_selector.dart';
 import '../../../core/auth/google_auth_service.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../main.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
@@ -101,7 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const StartupScreen()),
           (route) => false,
         );
       } else {
@@ -121,13 +122,22 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      appBar: AppBar(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(children: [
+      AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         actions: const [
@@ -137,14 +147,13 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+      Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.sheet),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,10 +162,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 Text(
                   context.l10n.createAccount,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
+                    color: scheme.primary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -169,7 +178,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 // Role Selection Cards (account type must be chosen before Google)
                 _RoleCard(
-                  icon: Icons.directions_car,
+                  icon: Icons.directions_car_rounded,
                   title: context.l10n.driver,
                   subtitle: context.l10n.iWantToDrive,
                   selected: _selectedRole == _RoleOption.driver,
@@ -177,7 +186,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 12),
                 _RoleCard(
-                  icon: Icons.person_pin,
+                  icon: Icons.person_pin_rounded,
                   title: context.l10n.rider,
                   subtitle: context.l10n.iNeedARideHome,
                   selected: _selectedRole == _RoleOption.rider,
@@ -185,7 +194,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 12),
                 _RoleCard(
-                  icon: Icons.local_taxi,
+                  icon: Icons.local_taxi_rounded,
                   title: context.l10n.customer,
                   subtitle: context.l10n.iOwnAVehicle,
                   selected: _selectedRole == _RoleOption.customer,
@@ -193,7 +202,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 12),
                 _RoleCard(
-                  icon: Icons.hotel,
+                  icon: Icons.hotel_rounded,
                   title: context.l10n.hotel,
                   subtitle: context.l10n.iAmAHotelPartner,
                   selected: _selectedRole == _RoleOption.hotel,
@@ -201,7 +210,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 12),
                 _RoleCard(
-                  icon: Icons.admin_panel_settings,
+                  icon: Icons.admin_panel_settings_rounded,
                   title: context.l10n.admin,
                   subtitle: context.l10n.iManageTheSystem,
                   selected: _selectedRole == _RoleOption.admin,
@@ -218,7 +227,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
                   ),
                   icon: _googleLoading
@@ -288,6 +297,8 @@ class _SignupScreenState extends State<SignupScreen> {
               ],
             ),
           ),
+      )),
+          ]),
         ),
       ),
     );
@@ -364,7 +375,7 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
       );
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const StartupScreen()),
         (route) => false,
       );
     } else {
@@ -397,9 +408,6 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
             child: Text(context.l10n.registerAsHotel),
           ),
         ],
@@ -420,7 +428,6 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
       ),
       validator: (v) => (v == null || v.isEmpty) ? context.l10n.required : null,
     );
@@ -447,22 +454,23 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.card - 4),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? Colors.indigo.shade50 : Colors.grey.shade50,
+          color: selected ? scheme.primaryContainer : Colors.grey.shade50,
           border: Border.all(
-            color: selected ? Colors.indigo : Colors.grey.shade300,
+            color: selected ? scheme.primary : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.card - 4),
         ),
         child: Row(
           children: [
-            Icon(icon, color: selected ? Colors.indigo : Colors.grey, size: 32),
+            Icon(icon, color: selected ? scheme.primary : Colors.grey, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -473,7 +481,7 @@ class _RoleCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: selected ? Colors.indigo : Colors.grey.shade800,
+                      color: selected ? scheme.primary : Colors.grey.shade800,
                     ),
                   ),
                   Text(
@@ -484,7 +492,7 @@ class _RoleCard extends StatelessWidget {
               ),
             ),
             if (selected)
-              const Icon(Icons.check_circle, color: Colors.indigo),
+              Icon(Icons.check_circle_rounded, color: scheme.primary),
           ],
         ),
       ),
