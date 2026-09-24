@@ -130,6 +130,12 @@ abstract class AppLocalizations {
   /// **'Let\'s Hire'**
   String get letsHire;
 
+  /// No description provided for @customerLoginRegisterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer login / register from here'**
+  String get customerLoginRegisterHint;
+
   /// No description provided for @register.
   ///
   /// In en, this message translates to:
@@ -141,6 +147,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or other logins'**
   String get otherLogins;
+
+  /// No description provided for @loginFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in from here'**
+  String get loginFromHere;
 
   /// No description provided for @support24_7.
   ///
@@ -331,19 +343,19 @@ abstract class AppLocalizations {
   /// No description provided for @iWantToDrive.
   ///
   /// In en, this message translates to:
-  /// **'I want to drive'**
+  /// **'I am a Driver'**
   String get iWantToDrive;
 
   /// No description provided for @iNeedARideHome.
   ///
   /// In en, this message translates to:
-  /// **'I need a ride home'**
+  /// **'I am a Rider'**
   String get iNeedARideHome;
 
   /// No description provided for @iOwnAVehicle.
   ///
   /// In en, this message translates to:
-  /// **'I own a vehicle'**
+  /// **'I want Driver'**
   String get iOwnAVehicle;
 
   /// No description provided for @iAmAHotelPartner.
@@ -736,6 +748,12 @@ abstract class AppLocalizations {
   /// **'Your phone number and NIC are needed so drivers can contact you and we can confirm your identity.'**
   String get detailsRequiredInfo;
 
+  /// No description provided for @detailsRequiredInfoStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone number and NIC are needed so customers/riders can contact you and we can confirm your identity.'**
+  String get detailsRequiredInfoStaff;
+
   /// No description provided for @emailFromGoogle.
   ///
   /// In en, this message translates to:
@@ -801,6 +819,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'✅ Vehicle details saved!'**
   String get vehicleDetailsSaved;
+
+  /// No description provided for @completeDriverProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete Your Driver Profile'**
+  String get completeDriverProfile;
+
+  /// No description provided for @completeDriverProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your license and vehicle details to start receiving rides'**
+  String get completeDriverProfileSubtitle;
+
+  /// No description provided for @licenseFrontPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'License Front Photo'**
+  String get licenseFrontPhoto;
+
+  /// No description provided for @licenseBackPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'License Back Photo'**
+  String get licenseBackPhoto;
+
+  /// No description provided for @licenseExpiryLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light License Expiry Date'**
+  String get licenseExpiryLight;
+
+  /// No description provided for @licenseExpiryHeavy.
+  ///
+  /// In en, this message translates to:
+  /// **'Heavy License Expiry Date'**
+  String get licenseExpiryHeavy;
+
+  /// No description provided for @uploadPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload Photo'**
+  String get uploadPhoto;
+
+  /// No description provided for @changePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Photo'**
+  String get changePhoto;
+
+  /// No description provided for @uploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading...'**
+  String get uploading;
+
+  /// No description provided for @photoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please upload this photo'**
+  String get photoRequired;
+
+  /// No description provided for @dateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a date'**
+  String get dateRequired;
+
+  /// No description provided for @saveDriverProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Driver Profile'**
+  String get saveDriverProfile;
+
+  /// No description provided for @driverProfileSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Driver profile saved!'**
+  String get driverProfileSaved;
 
   /// No description provided for @myVehicle.
   ///
@@ -1336,11 +1432,29 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get profile;
 
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
   /// No description provided for @myDetails.
   ///
   /// In en, this message translates to:
   /// **'My details'**
   String get myDetails;
+
+  /// No description provided for @terms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get terms;
+
+  /// No description provided for @termsAndConditions.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions'**
+  String get termsAndConditions;
 
   /// No description provided for @welcomeNameRider.
   ///
@@ -1677,6 +1791,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ride Completed'**
   String get rideCompletedLabel;
+
+  /// No description provided for @myEarnings.
+  ///
+  /// In en, this message translates to:
+  /// **'My Earnings'**
+  String get myEarnings;
+
+  /// No description provided for @ridesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides'**
+  String get ridesCount;
+
+  /// No description provided for @earningsShareLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% share'**
+  String earningsShareLabel(String pct);
+
+  /// No description provided for @earningsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load earnings'**
+  String get earningsLoadFailed;
+
+  /// No description provided for @iAgreeToTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the Terms & Conditions'**
+  String get iAgreeToTerms;
+
+  /// No description provided for @termsRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept the Terms & Conditions to continue'**
+  String get termsRequiredError;
+
+  /// No description provided for @viewFullTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'View full terms'**
+  String get viewFullTerms;
+
+  /// No description provided for @termsVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String termsVersionLabel(String version);
+
+  /// No description provided for @termsUpdatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {date}'**
+  String termsUpdatedLabel(String date);
+
+  /// No description provided for @termsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the Terms & Conditions'**
+  String get termsLoadFailed;
+
+  /// No description provided for @termsAcceptanceRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Conditions required'**
+  String get termsAcceptanceRequiredTitle;
+
+  /// No description provided for @termsAcceptanceRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please review and accept the Terms & Conditions to continue using the app.'**
+  String get termsAcceptanceRequiredBody;
+
+  /// No description provided for @iAgreeAndContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'I agree & continue'**
+  String get iAgreeAndContinue;
+
+  /// No description provided for @termsUpdatedPleaseReview.
+  ///
+  /// In en, this message translates to:
+  /// **'The Terms & Conditions were updated. Please review the latest version and accept it.'**
+  String get termsUpdatedPleaseReview;
 
   /// No description provided for @language.
   ///

@@ -2,7 +2,8 @@
 // Signup Screen - Role Selection + Role-Based Registration Forms
 // ============================================================
 // Allows users to select their account type and fill the appropriate
-// registration form. Supported roles: Driver, Rider, Customer, Hotel, Admin.
+// registration form. Supported roles: Customer, Driver, Rider, Hotel.
+// (Admin accounts are not self-service — created separately.)
 // Also supports Google Sign-In, but an account type must be selected
 // BEFORE Google sign-in is allowed to start.
 // ============================================================
@@ -12,7 +13,10 @@ import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/widgets/language_selector.dart';
 import '../../../core/auth/google_auth_service.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../main.dart';
+import '../../legal/providers/terms_provider.dart';
+import '../../legal/widgets/terms_acceptance_field.dart';
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
@@ -20,9 +24,8 @@ import 'login_screen.dart';
 import '../widgets/driver_signup_form.dart';
 import '../widgets/rider_signup_form.dart';
 import '../widgets/customer_signup_form.dart';
-import '../widgets/admin_signup_form.dart';
 
-enum _RoleOption { driver, rider, customer, hotel, admin }
+enum _RoleOption { customer, driver, rider, hotel }
 
 class SignupScreen extends StatefulWidget {
   final String? initialRole; // e.g. "customer" to pre-select customer signup
@@ -35,6 +38,9 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   _RoleOption? _selectedRole;
   bool _googleLoading = false;
+  // Mirrors the tick of the Terms & Conditions checkbox inside the selected
+  // role form, so Google signup can require it too.
+  bool _agreedToTerms = false;
 
   @override
   void initState() {
@@ -43,6 +49,14 @@ class _SignupScreenState extends State<SignupScreen> {
     if (widget.initialRole == 'customer') {
       _selectedRole = _RoleOption.customer;
     }
+  }
+
+  /// Selecting a role swaps in a fresh form, so the consent starts unticked.
+  void _selectRole(_RoleOption role) {
+    setState(() {
+      _selectedRole = role;
+      _agreedToTerms = false;
+    });
   }
 
   Future<void> _googleSignIn() async {
@@ -56,18 +70,23 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       return;
     }
-    // Admin accounts are created through the email/password form only.
-    if (_selectedRole == _RoleOption.admin) {
+
+    // Google signup creates the account, so the Terms & Conditions checkbox in
+    // the role form below must be ticked first.
+    if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(context.l10n.adminMustUseEmail),
-          duration: const Duration(seconds: 3),
+          content: Text(context.l10n.termsRequiredError),
+          backgroundColor: context.statusColors.danger,
         ),
       );
       return;
     }
 
     final auth = context.read<AuthProvider>();
+    // Read context-dependent values before the awaits below
+    final termsVersion = context.read<TermsProvider>().version;
+    final termsLanguage = Localizations.localeOf(context).languageCode;
     setState(() => _googleLoading = true);
     try {
       // Role was validated above - map the selection to the API role string.
@@ -90,18 +109,24 @@ class _SignupScreenState extends State<SignupScreen> {
         throw Exception('Could not obtain Google ID token');
       }
 
-      final success = await auth.googleSignIn(idToken, role: role);
+      final success = await auth.googleSignIn(
+        idToken,
+        role: role,
+        // Consent for the version of the terms the user just read on screen
+        termsVersion: termsVersion,
+        termsLanguage: termsLanguage,
+      );
       if (!mounted) return;
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.l10n.googleSignInSuccessful),
-            backgroundColor: Colors.green,
+            backgroundColor: context.statusColors.success,
           ),
         );
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
+          MaterialPageRoute(builder: (_) => const StartupScreen()),
           (route) => false,
         );
       } else {
@@ -121,13 +146,22 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: Colors.indigo.shade900,
-      appBar: AppBar(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [scheme.primary, Color.lerp(scheme.primary, Colors.black, 0.55)!],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(children: [
+      AppBar(
         backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         actions: const [
@@ -137,14 +171,13 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+      Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppRadius.sheet),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,10 +186,10 @@ class _SignupScreenState extends State<SignupScreen> {
                 Text(
                   context.l10n.createAccount,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.indigo,
+                    color: scheme.primary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -169,43 +202,35 @@ class _SignupScreenState extends State<SignupScreen> {
 
                 // Role Selection Cards (account type must be chosen before Google)
                 _RoleCard(
-                  icon: Icons.directions_car,
-                  title: context.l10n.driver,
-                  subtitle: context.l10n.iWantToDrive,
-                  selected: _selectedRole == _RoleOption.driver,
-                  onTap: () => setState(() => _selectedRole = _RoleOption.driver),
-                ),
-                const SizedBox(height: 12),
-                _RoleCard(
-                  icon: Icons.person_pin,
-                  title: context.l10n.rider,
-                  subtitle: context.l10n.iNeedARideHome,
-                  selected: _selectedRole == _RoleOption.rider,
-                  onTap: () => setState(() => _selectedRole = _RoleOption.rider),
-                ),
-                const SizedBox(height: 12),
-                _RoleCard(
-                  icon: Icons.local_taxi,
+                  icon: Icons.local_taxi_rounded,
                   title: context.l10n.customer,
                   subtitle: context.l10n.iOwnAVehicle,
                   selected: _selectedRole == _RoleOption.customer,
-                  onTap: () => setState(() => _selectedRole = _RoleOption.customer),
+                  onTap: () => _selectRole(_RoleOption.customer),
                 ),
                 const SizedBox(height: 12),
                 _RoleCard(
-                  icon: Icons.hotel,
+                  icon: Icons.directions_car_rounded,
+                  title: context.l10n.driver,
+                  subtitle: context.l10n.iWantToDrive,
+                  selected: _selectedRole == _RoleOption.driver,
+                  onTap: () => _selectRole(_RoleOption.driver),
+                ),
+                const SizedBox(height: 12),
+                _RoleCard(
+                  icon: Icons.person_pin_rounded,
+                  title: context.l10n.rider,
+                  subtitle: context.l10n.iNeedARideHome,
+                  selected: _selectedRole == _RoleOption.rider,
+                  onTap: () => _selectRole(_RoleOption.rider),
+                ),
+                const SizedBox(height: 12),
+                _RoleCard(
+                  icon: Icons.hotel_rounded,
                   title: context.l10n.hotel,
                   subtitle: context.l10n.iAmAHotelPartner,
                   selected: _selectedRole == _RoleOption.hotel,
-                  onTap: () => setState(() => _selectedRole = _RoleOption.hotel),
-                ),
-                const SizedBox(height: 12),
-                _RoleCard(
-                  icon: Icons.admin_panel_settings,
-                  title: context.l10n.admin,
-                  subtitle: context.l10n.iManageTheSystem,
-                  selected: _selectedRole == _RoleOption.admin,
-                  onTap: () => setState(() => _selectedRole = _RoleOption.admin),
+                  onTap: () => _selectRole(_RoleOption.hotel),
                 ),
                 const SizedBox(height: 24),
 
@@ -218,7 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     side: BorderSide(color: Colors.grey.shade300),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(AppRadius.button),
                     ),
                   ),
                   icon: _googleLoading
@@ -288,23 +313,30 @@ class _SignupScreenState extends State<SignupScreen> {
               ],
             ),
           ),
+      )),
+          ]),
         ),
       ),
     );
   }
 
   Widget _buildRoleForm() {
+    // The role form owns its own Terms checkbox; its tick is mirrored so the
+    // Google button above can require acceptance as well.
+    void onTerms(bool agreed) {
+      if (!mounted) return;
+      setState(() => _agreedToTerms = agreed);
+    }
+
     switch (_selectedRole) {
-      case _RoleOption.driver:
-        return const DriverSignupForm();
-      case _RoleOption.rider:
-        return const RiderSignupForm();
       case _RoleOption.customer:
-        return const CustomerSignupForm();
+        return CustomerSignupForm(onTermsChanged: onTerms);
+      case _RoleOption.driver:
+        return DriverSignupForm(onTermsChanged: onTerms);
+      case _RoleOption.rider:
+        return RiderSignupForm(onTermsChanged: onTerms);
       case _RoleOption.hotel:
-        return const HotelSignupForm();
-      case _RoleOption.admin:
-        return const AdminSignupForm();
+        return HotelSignupForm(onTermsChanged: onTerms);
       default:
         return const SizedBox.shrink();
     }
@@ -315,7 +347,11 @@ class _SignupScreenState extends State<SignupScreen> {
 // Hotel Signup Form
 // ============================================================
 class HotelSignupForm extends StatefulWidget {
-  const HotelSignupForm({super.key});
+  /// Mirrors the Terms & Conditions tick up to the signup screen so
+  /// Google sign-in can require it as well.
+  final ValueChanged<bool>? onTermsChanged;
+
+  const HotelSignupForm({super.key, this.onTermsChanged});
   @override
   State<HotelSignupForm> createState() => _HotelSignupFormState();
 }
@@ -329,6 +365,23 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+
+  // Terms & Conditions consent (required before the account can be created)
+  bool _agreedToTerms = false;
+  bool _showTermsError = false;
+
+  /// Blocks the signup until the Terms & Conditions have been accepted.
+  bool _termsAccepted() {
+    if (_agreedToTerms) return true;
+    setState(() => _showTermsError = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.termsRequiredError),
+        backgroundColor: context.statusColors.danger,
+      ),
+    );
+    return false;
+  }
 
   @override
   void dispose() {
@@ -344,6 +397,7 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_termsAccepted()) return;
     final auth = context.read<AuthProvider>();
     final success = await auth.signup({
       'role': 'HOTEL',
@@ -356,6 +410,12 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
       'email': _email.text.trim(),
       'password': _password.text,
       'phone': _phone.text.trim(),
+      // Consent recorded server-side against the version shown to the user
+      'termsVersion': context.read<TermsProvider>().version,
+      // Language the terms were actually read in (the viewer's pick, else
+      // the app language)
+      'termsLanguage':
+          context.read<TermsProvider>().languageFor(Localizations.localeOf(context)),
     });
     if (!mounted) return;
     if (success) {
@@ -364,7 +424,7 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
       );
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const StartupScreen()),
         (route) => false,
       );
     } else {
@@ -395,11 +455,23 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
           const SizedBox(height: 12),
           _field(_password, context.l10n.passwordStar, Icons.lock, obscure: true),
           const SizedBox(height: 16),
+
+          // ---- Terms & Conditions (must be accepted to register) ----
+          TermsAcceptanceField(
+            onChanged: (agreed) {
+              setState(() {
+                _agreedToTerms = agreed;
+                if (agreed) _showTermsError = false;
+              });
+              // Mirror the tick up to the signup screen (used by Google sign-in)
+              widget.onTermsChanged?.call(agreed);
+            },
+            showError: _showTermsError,
+          ),
+          const SizedBox(height: 16),
+
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
             child: Text(context.l10n.registerAsHotel),
           ),
         ],
@@ -420,7 +492,6 @@ class _HotelSignupFormState extends State<HotelSignupForm> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
       ),
       validator: (v) => (v == null || v.isEmpty) ? context.l10n.required : null,
     );
@@ -447,22 +518,23 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.card - 4),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? Colors.indigo.shade50 : Colors.grey.shade50,
+          color: selected ? scheme.primaryContainer : Colors.grey.shade50,
           border: Border.all(
-            color: selected ? Colors.indigo : Colors.grey.shade300,
+            color: selected ? scheme.primary : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.card - 4),
         ),
         child: Row(
           children: [
-            Icon(icon, color: selected ? Colors.indigo : Colors.grey, size: 32),
+            Icon(icon, color: selected ? scheme.primary : Colors.grey, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -473,7 +545,7 @@ class _RoleCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: selected ? Colors.indigo : Colors.grey.shade800,
+                      color: selected ? scheme.primary : Colors.grey.shade800,
                     ),
                   ),
                   Text(
@@ -484,7 +556,7 @@ class _RoleCard extends StatelessWidget {
               ),
             ),
             if (selected)
-              const Icon(Icons.check_circle, color: Colors.indigo),
+              Icon(Icons.check_circle_rounded, color: scheme.primary),
           ],
         ),
       ),

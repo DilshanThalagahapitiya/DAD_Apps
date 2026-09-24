@@ -63,10 +63,22 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ---- GOOGLE SIGN-IN ----
-  Future<bool> googleSignIn(String idToken, {String role = 'CUSTOMER'}) async {
+  // [termsVersion]/[termsLanguage] carry the signup-screen consent (null for a
+  // plain Google login).
+  Future<bool> googleSignIn(
+    String idToken, {
+    String role = 'CUSTOMER',
+    String? termsVersion,
+    String? termsLanguage,
+  }) async {
     _setLoading(true);
     try {
-      final result = await _repo.googleSignIn(idToken, role: role);
+      final result = await _repo.googleSignIn(
+        idToken,
+        role: role,
+        termsVersion: termsVersion,
+        termsLanguage: termsLanguage,
+      );
       _user = result.user;
 
       // Save the Google profile photo URL (from the Google Sign-In session)
@@ -94,16 +106,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> refreshUser() async {
     try {
       final res = await ApiClient.instance.get('/api/auth/me');
-      final userJson = res['data']?['user'] as Map<String, dynamic>?;
-      if (userJson != null) {
-        // Preserve Google photo URL if the server response doesn't have it
-        final serverUser = UserModel.fromJson(userJson);
-        _user = serverUser.copyWith(
-          googlePhotoUrl: serverUser.googlePhotoUrl ?? _user?.googlePhotoUrl,
-        );
-        await _saveUser(_user!);
-        notifyListeners();
-      }
+      await applyUser(res['data']?['user'] as Map<String, dynamic>?);
     } catch (e) {
       if (e is ApiException) {
         final msg = e.message.toLowerCase();
@@ -111,6 +114,50 @@ class AuthProvider extends ChangeNotifier {
           logout();
         }
       }
+    }
+  }
+
+  /// Publish a user object that came back from the API (e.g. the response of
+  /// `PATCH /api/auth/me`) straight into the app state — no second request that
+  /// could fail silently.
+  ///
+  /// This is what lets a "Complete your profile" screen hand over to the
+  /// dashboard immediately: once [_user] reports the profile as complete, the
+  /// shell that watches this provider rebuilds into its tabs.
+  /// Returns true when the user was applied and listeners were notified.
+  Future<bool> applyUser(Map<String, dynamic>? userJson) async {
+    if (userJson == null) return false;
+    final serverUser = UserModel.fromJson(userJson);
+    _user = serverUser.copyWith(
+      // Preserve the Google photo URL if the server response doesn't have it
+      googlePhotoUrl: serverUser.googlePhotoUrl ?? _user?.googlePhotoUrl,
+    );
+    await _saveUser(_user!);
+    notifyListeners();
+    return true;
+  }
+
+  // ---- TERMS & CONDITIONS ----
+  /// True while the signed-in user still has to accept the published terms.
+  /// The backend sets this on login, signup and /api/auth/me for CUSTOMER,
+  /// DRIVER and RIDER accounts (a Google login that never ticked the signup
+  /// checkbox, or any account created before the terms existed).
+  bool get termsAcceptanceRequired => _user?.termsAcceptanceRequired ?? false;
+
+  /// Records acceptance of [version] and clears the gate immediately, so the
+  /// user is not stuck behind a stale server response.
+  Future<bool> acceptTerms({required String version, required String language}) async {
+    try {
+      await _repo.acceptTerms(version: version, language: language);
+      if (_user != null) {
+        _user = _user!.copyWith(termsAcceptanceRequired: false);
+        await _saveUser(_user!);
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _error = e.toString().replaceAll('Exception: ', '');
+      return false;
     }
   }
 

@@ -1,4 +1,4 @@
-package com.dad.dad_app
+package com.dad
 
 import io.flutter.embedding.android.FlutterActivity
 

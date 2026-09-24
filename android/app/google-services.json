@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "943078584636",
+    "project_id": "drinkanddrive-ff4f6",
+    "storage_bucket": "drinkanddrive-ff4f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:943078584636:android:485132582c75182225ae39",
+        "android_client_info": {
+          "package_name": "com.dad"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "943078584636-61gsl2bn5mb4cprv4q54qiop62vnl5gr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dad",
+            "certificate_hash": "8a9eb8d944fb7aecf7266367f1431bde5a3ccdad"
+          }
+        },
+        {
+          "client_id": "943078584636-aplhg0knknt7cm9g3tajb81sb1ngknp1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ1w0kNnl23dwWXATLvC_V_M47oJ_Feg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "943078584636-aplhg0knknt7cm9g3tajb81sb1ngknp1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "943078584636-uhs1ncblcuc441ktjae7lqj2v9iuua1r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dad"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

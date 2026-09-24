@@ -11,9 +11,17 @@ class NotificationService {
   static final NotificationService instance = NotificationService._();
   NotificationService._();
 
+  /// Bumped whenever a ride changes on the server (new assignment, acceptance,
+  /// start, completion). Screens that list rides listen to this and re-fetch, so
+  /// a driver/rider sees a newly assigned ticket — and the dashboard sees a
+  /// ticket as soon as both sides accepted — without restarting the app.
+  final ValueNotifier<int> ridesRevision = ValueNotifier<int>(0);
+  void _publishRidesChange() => ridesRevision.value++;
+
   Timer? _timer;
   String? _lastUserStatus;
   String? _lastRideStatus;
+  bool _hasPolledOnce = false;
 
   // Start polling when user logs in
   void startPolling(AuthProvider auth) {
@@ -37,6 +45,7 @@ class NotificationService {
     _timer = null;
     _lastUserStatus = null;
     _lastRideStatus = null;
+    _hasPolledOnce = false;
   }
 
   Future<void> _poll(AuthProvider auth) async {
@@ -61,19 +70,27 @@ class NotificationService {
           }
         }
 
-        // Check ride status change (e.g. ASSIGNED, ONGOING)
-        if (_lastRideStatus != null && _lastRideStatus != newRideStatus && newRideStatus != null) {
+        // Any ride-status change — including "no active ride" -> a brand-new
+        // ticket — is published so the ride lists re-fetch. This is what makes
+        // a fresh admin assignment appear in the driver's/rider's Upcoming tab
+        // and a confirmed ride appear on the dashboard.
+        final rideChanged = newRideStatus != _lastRideStatus;
+        if (rideChanged && _hasPolledOnce) {
           if (newRideStatus == 'ASSIGNED') {
-            _showNotification('Ride Assigned!', 'A driver has been assigned to your ride.');
+            _showNotification('New ride ticket!', 'A ride has been assigned to you. Please accept it.');
+          } else if (newRideStatus == 'UPCOMING') {
+            _showNotification('Ride confirmed', 'You are both in — the ride is now upcoming.');
           } else if (newRideStatus == 'ONGOING') {
             _showNotification('Ride Started', 'Your ride is now ongoing.');
           } else if (newRideStatus == 'COMPLETED') {
             _showNotification('Ride Completed', 'Your ride has been completed successfully.');
           }
         }
+        if (rideChanged) _publishRidesChange();
 
         _lastUserStatus = newUserStatus;
         _lastRideStatus = newRideStatus;
+        _hasPolledOnce = true;
       }
     } catch (e) {
       debugPrint('Notification polling error: $e');
@@ -92,6 +109,11 @@ class NotificationService {
     // Play default system notification sound
     SystemSound.play(SystemSoundType.alert);
 
+    // Use the admin-configured brand color (falls back to the themed snackbar
+    // style when the messenger has no context yet)
+    final context = notificationKey.currentContext;
+    final brandColor = context == null ? null : Theme.of(context).colorScheme.primary;
+
     // Show a top floating snackbar
     notificationKey.currentState?.showSnackBar(
       SnackBar(
@@ -104,7 +126,7 @@ class NotificationService {
             Text(message, style: const TextStyle(fontSize: 14)),
           ],
         ),
-        backgroundColor: Colors.indigo.shade800,
+        backgroundColor: brandColor,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

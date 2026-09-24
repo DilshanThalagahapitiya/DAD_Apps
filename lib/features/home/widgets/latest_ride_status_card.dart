@@ -15,6 +15,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/ride_status_chip.dart';
+import '../../../core/widgets/fare_breakdown_card.dart';
 
 class LatestRideStatusCard extends StatefulWidget {
   final int refreshTrigger;
@@ -66,28 +69,6 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
     return '$date  $time';
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'PENDING_REQUEST': return Colors.orange;
-      case 'ASSIGNED': return Colors.amber.shade700;
-      case 'UPCOMING': return Colors.indigo;
-      case 'ONGOING': return Colors.green;
-      case 'COMPLETED': return Colors.blueGrey;
-      default: return Colors.grey;
-    }
-  }
-
-  IconData _statusIcon(String status) {
-    switch (status) {
-      case 'PENDING_REQUEST': return Icons.hourglass_top;
-      case 'ASSIGNED': return Icons.event_available;
-      case 'UPCOMING': return Icons.event;
-      case 'ONGOING': return Icons.directions_car;
-      case 'COMPLETED': return Icons.check_circle_outline;
-      default: return Icons.info_outline;
-    }
-  }
-
   String _statusLabel(String status) {
     switch (status) {
       case 'PENDING_REQUEST': return context.l10n.waitingForAdminAssign;
@@ -101,31 +82,24 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.shade200, blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.notifications_active, color: Colors.indigo, size: 20),
+                Icon(Icons.notifications_active_rounded, color: scheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   context.l10n.latestRequestStatus,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.refresh, size: 18, color: Colors.grey),
+                  icon: Icon(Icons.refresh_rounded, size: 18, color: scheme.onSurfaceVariant),
                   onPressed: _fetchLatest,
                   tooltip: context.l10n.refresh,
                 ),
@@ -143,9 +117,9 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Column(
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 32),
+                    Icon(Icons.error_outline_rounded, color: context.statusColors.danger, size: 32),
                     const SizedBox(height: 8),
-                    Text(_error, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.red)),
+                    Text(_error, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 8),
                     ElevatedButton(onPressed: _fetchLatest, child: Text(context.l10n.retry)),
                   ],
@@ -157,12 +131,12 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
                 child: Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.inbox, size: 40, color: Colors.grey),
+                      Icon(Icons.inbox_rounded, size: 40, color: scheme.onSurfaceVariant),
                       const SizedBox(height: 8),
                       Text(context.l10n.noRideRequestsFull),
                       Text(
                         context.l10n.yourLatestRequestStatus,
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
                       ),
                     ],
                   ),
@@ -185,23 +159,22 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
     final driverCancelled = ride['driverCancelled'] == true;
     final riderCancelled = ride['riderCancelled'] == true;
     final isCancelled = driverCancelled || riderCancelled;
-    final statusColor = _statusColor(status);
+    final style = rideStatusStyle(context, status);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+            color: style.background,
+            borderRadius: BorderRadius.circular(AppRadius.card - 6),
           ),
           child: Row(
             children: [
-              Icon(_statusIcon(status), color: statusColor, size: 22),
-              const SizedBox(width: 8),
+              Icon(style.icon, color: style.color, size: 22),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,14 +182,14 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
                     Text(
                       status.replaceAll('_', ' '),
                       style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
+                        color: style.color,
+                        fontWeight: FontWeight.w700,
                         fontSize: 14,
                       ),
                     ),
                     Text(
                       _statusLabel(status),
-                      style: const TextStyle(fontSize: 11, color: Colors.black54),
+                      style: TextStyle(fontSize: 11, color: style.color.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -227,13 +200,13 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
 
         const SizedBox(height: 12),
 
-        _InfoRow(icon: Icons.trip_origin, color: Colors.green, text: '${ride['pickupLocation'] ?? '-'}'),
-        _InfoRow(icon: Icons.flag, color: Colors.red, text: '${ride['dropLocation'] ?? '-'}'),
-        _InfoRow(icon: Icons.schedule, color: Colors.indigo, text: _formatDate('${ride['startTime'] ?? ''}')),
+        _InfoRow(icon: Icons.trip_origin_rounded, color: context.statusColors.success, text: '${ride['pickupLocation'] ?? '-'}'),
+        _InfoRow(icon: Icons.flag_rounded, color: context.statusColors.danger, text: '${ride['dropLocation'] ?? '-'}'),
+        _InfoRow(icon: Icons.schedule_rounded, color: Theme.of(context).colorScheme.primary, text: _formatDate('${ride['startTime'] ?? ''}')),
         if (ride['vehicleType'] != null && ride['vehicleType'].toString().isNotEmpty)
-          _InfoRow(icon: Icons.directions_car, color: Colors.orange, text: '${ride['vehicleType']} • ⚙️ ${ride['transmission'] ?? '-'}'),
+          _InfoRow(icon: Icons.directions_car_rounded, color: context.statusColors.warning, text: '${ride['vehicleType']} • ${ride['transmission'] ?? '-'}'),
         if (ride['specialNote'] != null && ride['specialNote'].toString().isNotEmpty)
-          _InfoRow(icon: Icons.notes, color: Colors.blueGrey, text: '${ride['specialNote']}'),
+          _InfoRow(icon: Icons.notes_rounded, color: Theme.of(context).colorScheme.onSurfaceVariant, text: '${ride['specialNote']}'),
 
         const SizedBox(height: 12),
         const Divider(height: 1),
@@ -262,15 +235,14 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              color: context.statusColors.dangerContainer,
+              borderRadius: BorderRadius.circular(AppRadius.card - 8),
             ),
             child: Row(
               children: [
-                const Icon(Icons.cancel, color: Colors.red, size: 18),
+                Icon(Icons.cancel_rounded, color: context.statusColors.danger, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -279,7 +251,7 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
                         : driverCancelled
                             ? 'Driver cancelled this request. Admin will re-assign.'
                             : 'Rider cancelled this request. Admin will re-assign.',
-                    style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 12, color: context.statusColors.danger, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -287,37 +259,13 @@ class _LatestRideStatusCardState extends State<LatestRideStatusCard> {
           ),
         ],
 
-        // 💵 Total Fare — shown to customer when the ride is completed
+        // Total fare — shown to customer when the ride is completed
         if (status == 'COMPLETED' && (ride['totalFare'] ?? 0) > 0) ...[
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1F2937), Color(0xFF374151)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('💵 Total Fare',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.amber)),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Amount to pay',
-                        style: TextStyle(fontSize: 12, color: Colors.white70)),
-                    Text('Rs. ${ride['totalFare']}',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber)),
-                  ],
-                ),
-              ],
-            ),
+          const SizedBox(height: 14),
+          FareBreakdownCard(
+            title: context.l10n.totalFare,
+            totalLabel: 'Amount to pay',
+            totalFare: ride['totalFare'],
           ),
         ],
       ],
@@ -374,15 +322,16 @@ class _AssignedUserTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.indigo.shade300),
+        Icon(icon, size: 18, color: scheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              Text(label, style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
               Text(
                 name,
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
@@ -393,8 +342,8 @@ class _AssignedUserTile extends StatelessWidget {
         ),
         if (cancelled)
           Chip(
-            label: Text(context.l10n.cancelled, style: const TextStyle(color: Colors.red, fontSize: 10)),
-            backgroundColor: const Color(0xFFFFEBEE),
+            label: Text(context.l10n.cancelled, style: TextStyle(color: context.statusColors.danger, fontSize: 10)),
+            backgroundColor: context.statusColors.dangerContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),
@@ -402,8 +351,8 @@ class _AssignedUserTile extends StatelessWidget {
           )
         else if (accepted)
           Chip(
-            label: Text(context.l10n.accepted, style: const TextStyle(color: Colors.green, fontSize: 10)),
-            backgroundColor: const Color(0xFFE8F5E9),
+            label: Text(context.l10n.accepted, style: TextStyle(color: context.statusColors.success, fontSize: 10)),
+            backgroundColor: context.statusColors.successContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),
@@ -413,8 +362,8 @@ class _AssignedUserTile extends StatelessWidget {
           const SizedBox()
         else
           Chip(
-            label: Text(context.l10n.awaiting, style: const TextStyle(color: Colors.amber, fontSize: 10)),
-            backgroundColor: Colors.amber.shade50,
+            label: Text(context.l10n.awaiting, style: TextStyle(color: context.statusColors.warning, fontSize: 10)),
+            backgroundColor: context.statusColors.warningContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),

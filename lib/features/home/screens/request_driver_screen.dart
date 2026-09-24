@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/theme/app_theme.dart';
 
 class RequestDriverScreen extends StatefulWidget {
   const RequestDriverScreen({super.key});
@@ -41,7 +42,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
 
     try {
       final api = ApiClient.instance;
-      final response = await api.post('/api/rides/request', {
+      await api.post('/api/rides/request', {
         'pickupLocation': _pickupCtrl.text.trim(),
         'dropLocation': _dropCtrl.text.trim(),
         'startTime': _selectedTime.toIso8601String(),
@@ -50,16 +51,16 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Request submitted! Admin will assign a driver soon.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Request submitted! Admin will assign a driver soon.'),
+          backgroundColor: context.statusColors.success,
         ),
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: Colors.red),
+        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: context.statusColors.danger),
       );
       setState(() => _submitting = false);
     }
@@ -70,8 +71,10 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
     final auth = context.watch<AuthProvider>();
     final user = auth.user;
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.indigo, title: Text(context.l10n.requestDriver)),
+      appBar: AppBar(title: Text(context.l10n.requestDriver)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -83,15 +86,14 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.indigo.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.indigo.shade200),
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.card - 4),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(context.l10n.yourDetailsAutoFilled,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                     const SizedBox(height: 8),
                     Text(context.l10n.nameLabel(user?.fullName ?? '-'),
                         style: const TextStyle(fontSize: 13)),
@@ -107,8 +109,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.pickupLocation,
                   hintText: context.l10n.enterCurrentLocation,
-                  prefixIcon: const Icon(Icons.trip_origin),
-                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.trip_origin_rounded),
                 ),
                 validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
               ),
@@ -119,8 +120,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.dropLocation,
                   hintText: context.l10n.whereToGo,
-                  prefixIcon: const Icon(Icons.flag),
-                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.flag_rounded),
                 ),
                 validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
               ),
@@ -128,6 +128,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
 
               // Pickup time picker
               InkWell(
+                borderRadius: BorderRadius.circular(AppRadius.field),
                 onTap: () async {
                   final time = await showDatePicker(
                     context: context,
@@ -136,6 +137,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
                   if (time != null) {
+                    if (!context.mounted) return;
                     final t = await showTimePicker(
                       context: context,
                       initialTime: TimeOfDay.fromDateTime(_selectedTime),
@@ -151,8 +153,7 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                 child: InputDecorator(
                   decoration: InputDecoration(
                     labelText: context.l10n.pickupTime,
-                    prefixIcon: const Icon(Icons.schedule),
-                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.schedule_rounded),
                   ),
                   child: Text(
                     _selectedTime.toLocal().toString().replaceRange(16, 19, ''),
@@ -168,25 +169,20 @@ class _RequestDriverScreenState extends State<RequestDriverScreen> {
                 decoration: InputDecoration(
                   labelText: context.l10n.specialNote,
                   hintText: context.l10n.anyInstructions,
-                  prefixIcon: const Icon(Icons.notes),
-                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.notes_rounded),
                 ),
               ),
               const SizedBox(height: 24),
 
-              ElevatedButton(
+              FilledButton(
                 onPressed: _submitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.indigo,
-                ),
                 child: _submitting
                     ? const SizedBox(
                         width: 22,
                         height: 22,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : Text(context.l10n.requestDriver, style: const TextStyle(fontSize: 16)),
+                    : Text(context.l10n.requestDriver),
               ),
             ],
           ),

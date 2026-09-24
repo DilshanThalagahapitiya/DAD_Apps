@@ -11,13 +11,14 @@ import '../localization/locale_provider.dart';
 import '../localization/l10n_ext.dart';
 
 class LanguageSelector extends StatelessWidget {
-  final Color foregroundColor;
+  final Color? foregroundColor;
 
-  const LanguageSelector({super.key, this.foregroundColor = Colors.white});
+  const LanguageSelector({super.key, this.foregroundColor});
 
   @override
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
+    final color = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
 
     const languages = <({String code, String label})>[
       (code: 'en', label: 'English'),
@@ -33,7 +34,7 @@ class LanguageSelector extends StatelessWidget {
 
     return PopupMenuButton<String>(
       tooltip: context.l10n.language,
-      icon: Icon(Icons.language, color: foregroundColor),
+      icon: Icon(Icons.language_rounded, color: color),
       onSelected: (code) {
         context.read<LocaleProvider>().setLocale(Locale(code));
       },

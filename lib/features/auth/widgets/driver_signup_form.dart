@@ -5,11 +5,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../legal/providers/terms_provider.dart';
+import '../../legal/widgets/terms_acceptance_field.dart';
 import '../providers/auth_provider.dart';
-import '../../../features/home/screens/home_screen.dart';
+import '../../../main.dart';
 
 class DriverSignupForm extends StatefulWidget {
-  const DriverSignupForm({super.key});
+  /// Mirrors the Terms & Conditions tick up to the signup screen so
+  /// Google sign-in can require it as well.
+  final ValueChanged<bool>? onTermsChanged;
+
+  const DriverSignupForm({super.key, this.onTermsChanged});
   @override
   State<DriverSignupForm> createState() => _DriverSignupFormState();
 }
@@ -28,6 +35,23 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
   String _vehicleType = 'CAR';
   String _transmission = 'AUTO';
 
+  // Terms & Conditions consent (required before the account can be created)
+  bool _agreedToTerms = false;
+  bool _showTermsError = false;
+
+  /// Blocks the signup until the Terms & Conditions have been accepted.
+  bool _termsAccepted() {
+    if (_agreedToTerms) return true;
+    setState(() => _showTermsError = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.termsRequiredError),
+        backgroundColor: context.statusColors.danger,
+      ),
+    );
+    return false;
+  }
+
   @override
   void dispose() {
     _fName.dispose(); _lName.dispose(); _email.dispose(); _phone.dispose();
@@ -37,6 +61,7 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_termsAccepted()) return;
     final auth = context.read<AuthProvider>();
     final data = {
       'role': 'DRIVER',
@@ -55,6 +80,12 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
       'vehicleType': _vehicleType,
       'preferredGear': _transmission,
       'address': _city.text.trim(),
+      // Consent recorded server-side against the version shown to the user
+      'termsVersion': context.read<TermsProvider>().version,
+      // Language the terms were actually read in (the viewer's pick, else
+      // the app language)
+      'termsLanguage':
+          context.read<TermsProvider>().languageFor(Localizations.localeOf(context)),
     };
     final success = await auth.signup(data);
     if (!mounted) return;
@@ -62,7 +93,7 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration submitted! Wait for admin approval.')),
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const StartupScreen()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error ?? 'Registration failed')),
@@ -78,10 +109,10 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _sectionTitle(context.l10n.personalDetails),
-          _field(_fName, context.l10n.firstName, Icons.person),
+          _field(_fName, context.l10n.firstName, Icons.person_rounded),
           _field(_lName, context.l10n.lastName, Icons.person_outline),
           _field(_email, context.l10n.emailAddress, Icons.email, email: true),
-          _field(_phone, context.l10n.phoneNumber, Icons.phone, number: true),
+          _field(_phone, context.l10n.phoneNumber, Icons.phone_rounded, number: true),
           _field(_nic, context.l10n.nic, Icons.badge_outlined),
           _field(_city, context.l10n.city, Icons.location_city),
           const SizedBox(height: 12),
@@ -91,7 +122,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _licenseCategory,
             decoration: InputDecoration(
               labelText: context.l10n.licenseCategory,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'LIGHT_WEIGHT', child: Text(context.l10n.lightWeight)),
@@ -106,7 +136,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _vehicleType,
             decoration: InputDecoration(
               labelText: context.l10n.preferredVehicle,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'CAR', child: Text(context.l10n.car)),
@@ -124,7 +153,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             value: _transmission,
             decoration: InputDecoration(
               labelText: context.l10n.transmission,
-              border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem(value: 'AUTO', child: Text(context.l10n.auto)),
@@ -134,14 +162,25 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
             onChanged: (v) => setState(() => _transmission = v!),
           ),
           const SizedBox(height: 12),
-          _field(_password, context.l10n.passwordStar, Icons.lock, obscure: true),
+          _field(_password, context.l10n.passwordStar, Icons.lock_rounded, obscure: true),
           const SizedBox(height: 20),
+
+          // ---- Terms & Conditions (must be accepted to register) ----
+          TermsAcceptanceField(
+            onChanged: (agreed) {
+              setState(() {
+                _agreedToTerms = agreed;
+                if (agreed) _showTermsError = false;
+              });
+              // Mirror the tick up to the signup screen (used by Google sign-in)
+              widget.onTermsChanged?.call(agreed);
+            },
+            showError: _showTermsError,
+          ),
+          const SizedBox(height: 16),
+
           ElevatedButton(
             onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: Colors.indigo,
-            ),
             child: Text(context.l10n.registerAsDriver),
           ),
         ],
@@ -170,7 +209,6 @@ class _DriverSignupFormState extends State<DriverSignupForm> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          border: const OutlineInputBorder(),
         ),
         validator: (v) => v == null || v.isEmpty ? context.l10n.required : null,
       ),

@@ -35,10 +35,20 @@ class AuthRepository {
   }
 
   // ---- GOOGLE SIGN-IN ----
-  Future<AuthResult> googleSignIn(String idToken, {String role = 'CUSTOMER'}) async {
+  // termsVersion / termsLanguage are sent only when Google is used from the
+  // signup screen with the Terms & Conditions checkbox ticked (a plain Google
+  // login sends no consent).
+  Future<AuthResult> googleSignIn(
+    String idToken, {
+    String role = 'CUSTOMER',
+    String? termsVersion,
+    String? termsLanguage,
+  }) async {
     final response = await _api.post('/api/auth/google', {
       'idToken': idToken,
       'role': role,
+      if (termsVersion != null && termsVersion.isNotEmpty) 'termsVersion': termsVersion,
+      if (termsLanguage != null && termsLanguage.isNotEmpty) 'termsLanguage': termsLanguage,
     }, auth: false);
     final data = response['data'] as Map<String, dynamic>;
     final result = AuthResult.fromJson(data);
@@ -46,6 +56,17 @@ class AuthRepository {
       _api.setToken(result.token);
     }
     return result;
+  }
+
+  // ---- TERMS & CONDITIONS ----
+  /// Records that the signed-in user accepted [version] (the version that was
+  /// actually displayed). The backend rejects an outdated version with 409, so
+  /// the caller can show the latest terms and ask again.
+  Future<void> acceptTerms({required String version, required String language}) async {
+    await _api.post('/api/terms/accept', {
+      'version': version,
+      'language': language,
+    });
   }
 
   // ---- LOGOUT ----
