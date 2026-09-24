@@ -16,6 +16,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/complete_profile_screen.dart';
 import '../../auth/screens/complete_user_details_screen.dart';
+import '../../legal/screens/terms_acceptance_screen.dart';
 import 'request_driver_screen.dart';
 import 'my_vehicle_screen.dart';
 import '../widgets/rate_table_card.dart';
@@ -179,14 +180,23 @@ class _CustomerHomeTabState extends State<CustomerHomeTab> {
 
           FilledButton.icon(
             onPressed: () async {
-              await Navigator.push(
-                context,
+              final auth = context.read<AuthProvider>();
+              final navigator = Navigator.of(context);
+              // Terms & Conditions are required before a ride can be requested:
+              // send the customer to the acceptance gate first.
+              if (auth.termsAcceptanceRequired) {
+                await navigator.push(
+                  MaterialPageRoute(builder: (_) => const TermsAcceptanceScreen()),
+                );
+                // Still unaccepted (they backed out) — nothing to request
+                if (auth.termsAcceptanceRequired) return;
+              }
+              await navigator.push(
                 MaterialPageRoute(builder: (_) => const RequestDriverScreen()),
               );
-              if (mounted) {
-                setState(() => _refreshTrigger++);
-                widget.onRideActivity?.call();
-              }
+              if (!mounted) return;
+              setState(() => _refreshTrigger++);
+              widget.onRideActivity?.call();
             },
             icon: const Icon(Icons.airport_shuttle_rounded),
             label: Text(context.l10n.requestDriver, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),

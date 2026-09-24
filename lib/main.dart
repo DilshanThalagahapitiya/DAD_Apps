@@ -17,20 +17,25 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/screens/landing_screen.dart';
+import 'features/legal/providers/terms_provider.dart';
+import 'features/legal/screens/terms_acceptance_screen.dart';
 import 'features/home/screens/home_screen.dart';
 import 'features/shell/customer_shell.dart';
+import 'features/shell/driver_rider_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Restore the previously selected language and cached brand colors
-  // before building the UI, then refresh the brand colors from the
-  // backend in the background (admin may have changed them since).
+  // before building the UI, then keep the brand colors in sync with the
+  // admin panel (at startup, when the app is reopened, and every 15s while it
+  // runs) so an admin color change shows up without reinstalling the app.
   final localeProvider = LocaleProvider();
   await localeProvider.loadLocale();
   final themeProvider = ThemeProvider();
   await themeProvider.loadCached();
   runApp(DadApp(localeProvider: localeProvider, themeProvider: themeProvider));
-  themeProvider.refresh();
+  themeProvider.refresh();          // pick up admin changes right away
+  themeProvider.startAutoRefresh(); // and keep checking while the app runs
 }
 
 class DadApp extends StatelessWidget {
@@ -44,6 +49,9 @@ class DadApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
         ChangeNotifierProvider<ThemeProvider>.value(value: themeProvider),
+        // Terms & Conditions published by the admin — shared by the signup
+        // step, the customer tab and the Settings entry (one cached fetch).
+        ChangeNotifierProvider<TermsProvider>(create: (_) => TermsProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()..restoreSession()),
       ],
       child: Consumer3<LocaleProvider, ThemeProvider, AuthProvider>(
@@ -88,8 +96,22 @@ class StartupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     if (auth.isLoggedIn) {
+      // Required Terms & Conditions: the backend flags every customer / driver /
+      // rider who has not accepted the currently published version (signed in
+      // with Google, or an account created before the terms existed). Nothing
+      // else is reachable — so a customer cannot request a driver — until the
+      // checkbox is accepted.
+      if (auth.termsAcceptanceRequired) {
+        return const TermsAcceptanceScreen();
+      }
       if (auth.role == UserRole.customer) {
         return const CustomerShell();
+      }
+      if (auth.role == UserRole.driver) {
+        return const DriverRiderShell(role: 'driver');
+      }
+      if (auth.role == UserRole.rider) {
+        return const DriverRiderShell(role: 'rider');
       }
       return const HomeScreen();
     }

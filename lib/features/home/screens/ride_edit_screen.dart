@@ -15,6 +15,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/image_upload.dart';
 import '../../../core/widgets/fare_breakdown_card.dart';
 import '../widgets/map_location_picker.dart';
 
@@ -47,6 +48,8 @@ class _RideEditScreenState extends State<RideEditScreen> {
   final TextEditingController _odoEndCtrl = TextEditingController();
   String? _odoStartImage;
   String? _odoEndImage;
+  bool _uploadingStartOdo = false;
+  bool _uploadingEndOdo = false;
   final ImagePicker _picker = ImagePicker();
 
   String get _endpoint =>
@@ -63,8 +66,13 @@ class _RideEditScreenState extends State<RideEditScreen> {
     _dropLng = widget.ride['dropLongitude'] != null ? (widget.ride['dropLongitude'] as num).toDouble() : null;
     _odoStartCtrl.text = '${widget.ride['odoStart'] ?? ''}';
     _odoEndCtrl.text = '${widget.ride['odoEnd'] ?? ''}';
-    _odoStartImage = widget.ride['odoStartImage'];
-    _odoEndImage = widget.ride['odoEndImage'];
+    // Only an uploaded file ("/uploads/…") can be shown in the admin portal.
+    // Older builds stored the phone's own path, so treat those as "no photo
+    // yet" and let the driver re-capture it.
+    _odoStartImage =
+        isUploadedFileUrl(widget.ride['odoStartImage'] as String?) ? widget.ride['odoStartImage'] : null;
+    _odoEndImage =
+        isUploadedFileUrl(widget.ride['odoEndImage'] as String?) ? widget.ride['odoEndImage'] : null;
     _status = widget.ride['status'] ?? '';
 
     try {
@@ -161,23 +169,46 @@ class _RideEditScreenState extends State<RideEditScreen> {
     }
   }
 
-  // Capture odometer proof photo via camera
+  // Capture the odometer proof photo and UPLOAD it, so the admin portal can
+  // display it. Storing the phone's own file path (what this used to do) is
+  // useless outside the device — the portal just showed a broken image.
   Future<void> _captureOdoPhoto({required bool isStart}) async {
     try {
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
         imageQuality: 70,
       );
-      if (photo != null) {
+      if (photo == null) return;
+
+      setState(() {
+        if (isStart) {
+          _uploadingStartOdo = true;
+        } else {
+          _uploadingEndOdo = true;
+        }
+      });
+
+      try {
+        // Re-encodes to JPEG (iPhone HEIC) and uploads; returns "/uploads/..."
+        final url = await uploadCapturedImage(photo.path);
+        if (!mounted) return;
         setState(() {
           if (isStart) {
-            _odoStartImage = photo.path;
+            _odoStartImage = url;
           } else {
-            _odoEndImage = photo.path;
+            _odoEndImage = url;
           }
         });
+      } finally {
+        if (mounted) {
+          setState(() {
+            _uploadingStartOdo = false;
+            _uploadingEndOdo = false;
+          });
+        }
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.cameraError(e.toString())), backgroundColor: context.statusColors.danger),
       );
@@ -424,8 +455,10 @@ class _RideEditScreenState extends State<RideEditScreen> {
                     ),
                     const SizedBox(height: 6),
                     OutlinedButton.icon(
-                      onPressed: locked ? null : () => _captureOdoPhoto(isStart: true),
-                      icon: Icon(Icons.photo_camera_rounded, color: context.statusColors.success),
+                      onPressed: (locked || _uploadingStartOdo) ? null : () => _captureOdoPhoto(isStart: true),
+                      icon: _uploadingStartOdo
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(Icons.photo_camera_rounded, color: context.statusColors.success),
                       label: Text(_odoStartImage != null
                           ? context.l10n.startOdoPhotoDone
                           : context.l10n.captureStartOdoPhoto),
@@ -448,8 +481,10 @@ class _RideEditScreenState extends State<RideEditScreen> {
                     ),
                     const SizedBox(height: 6),
                     OutlinedButton.icon(
-                      onPressed: locked ? null : () => _captureOdoPhoto(isStart: false),
-                      icon: Icon(Icons.photo_camera_rounded, color: context.statusColors.danger),
+                      onPressed: (locked || _uploadingEndOdo) ? null : () => _captureOdoPhoto(isStart: false),
+                      icon: _uploadingEndOdo
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(Icons.photo_camera_rounded, color: context.statusColors.danger),
                       label: Text(_odoEndImage != null
                           ? context.l10n.endOdoPhotoDone
                           : context.l10n.captureEndOdoPhoto),

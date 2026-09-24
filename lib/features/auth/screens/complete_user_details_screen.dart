@@ -1,12 +1,15 @@
 // ============================================================
-// Complete User Details Screen (Customer)
+// Complete User Details Screen
 // ============================================================
 // Shown right after a Google sign-in (or any login) when the user's
 // PERSONAL details are still missing - a Google account is created with
-// no phone number and no NIC.
+// no phone number and no NIC. Used by Customer, Driver and Rider.
 //
-// This step comes BEFORE the "Add Your Vehicle Details" popup, so the
-// customer must fill their own details first.
+// For Customer it's pushed as a dismissible step before the "Add Your
+// Vehicle Details" popup. For Driver/Rider it's rendered directly in
+// place of DriverRiderShell (showBackButton: false) as a hard block —
+// there is nothing to go back to, and the account can't be used until
+// these details are saved.
 // ============================================================
 
 import 'package:flutter/material.dart';
@@ -17,7 +20,10 @@ import '../../../core/theme/app_theme.dart';
 import '../providers/auth_provider.dart';
 
 class CompleteUserDetailsScreen extends StatefulWidget {
-  const CompleteUserDetailsScreen({super.key});
+  /// False when this screen is a hard block (Driver/Rider) with nothing to
+  /// return to — hides the back button and disables the system back gesture.
+  final bool showBackButton;
+  const CompleteUserDetailsScreen({super.key, this.showBackButton = true});
   @override
   State<CompleteUserDetailsScreen> createState() =>
       _CompleteUserDetailsScreenState();
@@ -92,18 +98,31 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
         body['dob'] = _dob!.toIso8601String();
       }
 
-      await ApiClient.instance.patch('/api/auth/me', body);
+      final res = await ApiClient.instance.patch('/api/auth/me', body);
 
-      // Refresh so userDetailsComplete / profileComplete are up to date.
-      await auth.refreshUser();
+      // Publish the updated user straight from the save response so the caller
+      // (DriverRiderShell / CustomerShell) can move on to the dashboard.
+      final applied = await auth.applyUser(res['data']?['user'] as Map<String, dynamic>?);
+      if (!applied) await auth.refreshUser(); // fall back to a full refresh
 
+      if (!mounted) return;
+      final complete = auth.user?.userDetailsComplete ?? false;
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.detailsSaved),
-          backgroundColor: successColor,
+          content: Text(complete ? l10n.detailsSaved : l10n.pleaseCompleteProfile),
+          backgroundColor: complete ? successColor : context.statusColors.warning,
         ),
       );
-      navigator.pop(true);
+
+      // Only pop when this screen owns the current route (pushed from the
+      // customer dashboard). As the driver/rider gate it lives *inside* the
+      // shell's route, where popping would drop the user back to the
+      // landing/login screen instead of the dashboard — that one rebuilds by
+      // itself from the AuthProvider state applied above.
+      final route = ModalRoute.of(context);
+      if (route != null && !route.isFirst && navigator.canPop()) {
+        navigator.pop(true);
+      }
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.failedToSave(e.toString()))),
@@ -117,7 +136,9 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
   Widget build(BuildContext context) {
     final user = context.read<AuthProvider>().user;
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
+    return PopScope(
+      canPop: widget.showBackButton,
+      child: Scaffold(
       body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -130,13 +151,16 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
           child: Column(children: [
       AppBar(
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
         title: Text(context.l10n.completeYourDetails,
             style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-          onPressed: () => Navigator.pop(context, false),
-        ),
+        leading: widget.showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                onPressed: () => Navigator.pop(context, false),
+              )
+            : null,
       ),
       Expanded(child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -160,7 +184,12 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 12),
-                  _infoCard(context, context.l10n.detailsRequiredInfo),
+                  _infoCard(
+                    context,
+                    user?.role == 'CUSTOMER'
+                        ? context.l10n.detailsRequiredInfo
+                        : context.l10n.detailsRequiredInfoStaff,
+                  ),
                   const SizedBox(height: 20),
 
                   // First name
@@ -270,6 +299,7 @@ class _CompleteUserDetailsScreenState extends State<CompleteUserDetailsScreen> {
       )),
           ]),
         ),
+      ),
       ),
     );
   }

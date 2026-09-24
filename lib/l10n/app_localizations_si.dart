@@ -26,10 +26,17 @@ class AppLocalizationsSi extends AppLocalizations {
   String get letsHire => 'රියදුරෙකු වෙන්කරවා ගනිමු';
 
   @override
+  String get customerLoginRegisterHint =>
+      'පාරිභෝගික පිවිසුම / ලියාපදිංචිය මෙතැනින්';
+
+  @override
   String get register => 'ලියාපදිංචි වන්න';
 
   @override
   String get otherLogins => 'හෝ වෙනත් පිවිසුම්';
+
+  @override
+  String get loginFromHere => 'මෙතැනින් පිවිසෙන්න';
 
   @override
   String get support24_7 => '24/7 සහාය';
@@ -132,16 +139,16 @@ class AppLocalizationsSi extends AppLocalizations {
   String get admin => 'පරිපාලක';
 
   @override
-  String get iWantToDrive => 'මට රිය පැදවීමට අවශ්‍යයි';
+  String get iWantToDrive => 'මම රියදුරෙකි';
 
   @override
-  String get iNeedARideHome => 'මට ගෙදර යාමට වාහනයක් අවශ්‍යයි';
+  String get iNeedARideHome => 'මම පැදිකරුවෙකි';
 
   @override
-  String get iOwnAVehicle => 'මට වාහනයක් තිබේ';
+  String get iOwnAVehicle => 'මට රියදුරෙකු අවශ්‍යයි';
 
   @override
-  String get iAmAHotelPartner => 'මම හෝටල් හවුල්කරුවෙක්';
+  String get iAmAHotelPartner => 'මම හෝටල් හිමිකරුවෙකි';
 
   @override
   String get iManageTheSystem => 'මම පද්ධතිය කළමනාකරණය කරමි';
@@ -345,6 +352,10 @@ class AppLocalizationsSi extends AppLocalizations {
       'රියදුරන්ට ඔබ හා සම්බන්ධ වීමට සහ ඔබව හඳුනා ගැනීමට ඔබේ දුරකථන අංකය සහ ජා.හැ.අ. අවශ්‍යයි.';
 
   @override
+  String get detailsRequiredInfoStaff =>
+      'පාරිභෝගිකයන්ට/පැදවන්නන්ට ඔබ හා සම්බන්ධ වීමට සහ ඔබව හඳුනා ගැනීමට ඔබේ දුරකථන අංකය සහ ජා.හැ.අ. අවශ්‍යයි.';
+
+  @override
   String get emailFromGoogle => 'විද්‍යුත් තැපෑල (Google වෙතින්)';
 
   @override
@@ -379,6 +390,46 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get vehicleDetailsSaved => '✅ වාහන විස්තර සුරකින ලදී!';
+
+  @override
+  String get completeDriverProfile => 'ඔබේ රියදුරු පැතිකඩ සම්පූර්ණ කරන්න';
+
+  @override
+  String get completeDriverProfileSubtitle =>
+      'ගමන් ලබා ගැනීම ආරම්භ කිරීමට ඔබේ බලපත්‍ර සහ වාහන විස්තර එක් කරන්න';
+
+  @override
+  String get licenseFrontPhoto => 'බලපත්‍රයේ ඉදිරිපස ඡායාරූපය';
+
+  @override
+  String get licenseBackPhoto => 'බලපත්‍රයේ පිටුපස ඡායාරූපය';
+
+  @override
+  String get licenseExpiryLight => 'සැහැල්ලු බලපත්‍ර කල් ඉකුත් වන දිනය';
+
+  @override
+  String get licenseExpiryHeavy => 'බර බලපත්‍ර කල් ඉකුත් වන දිනය';
+
+  @override
+  String get uploadPhoto => 'ඡායාරූපය උඩුගත කරන්න';
+
+  @override
+  String get changePhoto => 'ඡායාරූපය වෙනස් කරන්න';
+
+  @override
+  String get uploading => 'උඩුගත වෙමින්...';
+
+  @override
+  String get photoRequired => 'කරුණාකර මෙම ඡායාරූපය උඩුගත කරන්න';
+
+  @override
+  String get dateRequired => 'කරුණාකර දිනයක් තෝරන්න';
+
+  @override
+  String get saveDriverProfile => 'රියදුරු පැතිකඩ සුරකින්න';
+
+  @override
+  String get driverProfileSaved => '✅ රියදුරු පැතිකඩ සුරකින ලදී!';
 
   @override
   String get myVehicle => 'මගේ වාහනය';
@@ -680,7 +731,16 @@ class AppLocalizationsSi extends AppLocalizations {
   String get profile => 'පැතිකඩ';
 
   @override
+  String get settings => 'සැකසුම්';
+
+  @override
   String get myDetails => 'මගේ විස්තර';
+
+  @override
+  String get terms => 'නියමයන්';
+
+  @override
+  String get termsAndConditions => 'නියම හා කොන්දේසි';
 
   @override
   String welcomeNameRider(String name) {
@@ -874,6 +934,57 @@ class AppLocalizationsSi extends AppLocalizations {
 
   @override
   String get rideCompletedLabel => 'ගමන සම්පූර්ණයි';
+
+  @override
+  String get myEarnings => 'My Earnings';
+
+  @override
+  String get ridesCount => 'Rides';
+
+  @override
+  String earningsShareLabel(String pct) {
+    return '$pct% share';
+  }
+
+  @override
+  String get earningsLoadFailed => 'Couldn\'t load earnings';
+
+  @override
+  String get iAgreeToTerms => 'I have read and agree to the Terms & Conditions';
+
+  @override
+  String get termsRequiredError =>
+      'Please accept the Terms & Conditions to continue';
+
+  @override
+  String get viewFullTerms => 'View full terms';
+
+  @override
+  String termsVersionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String termsUpdatedLabel(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get termsLoadFailed => 'Couldn\'t load the Terms & Conditions';
+
+  @override
+  String get termsAcceptanceRequiredTitle => 'Terms & Conditions required';
+
+  @override
+  String get termsAcceptanceRequiredBody =>
+      'Please review and accept the Terms & Conditions to continue using the app.';
+
+  @override
+  String get iAgreeAndContinue => 'I agree & continue';
+
+  @override
+  String get termsUpdatedPleaseReview =>
+      'The Terms & Conditions were updated. Please review the latest version and accept it.';
 
   @override
   String get language => 'භාෂාව';

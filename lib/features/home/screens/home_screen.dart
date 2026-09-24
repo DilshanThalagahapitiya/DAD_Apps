@@ -2,11 +2,10 @@
 // Home Screen - Role-Based Dashboard
 // ============================================================
 // Shows different dashboard based on user role:
-//   - Driver: view rides
-//   - Rider: book a ride
 //   - Admin: manage system
 //   - Pending: awaiting approval
-// Customers use CustomerShell (bottom tab bar) instead of this
+// Customers use CustomerShell, and Drivers/Riders use
+// DriverRiderShell (both bottom-tab-bar shells) instead of this
 // screen — see main.dart's StartupScreen.
 // ============================================================
 
@@ -18,7 +17,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/landing_screen.dart';
-import 'my_rides_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -112,171 +110,11 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildRoleDashboard(String role, String name) {
     switch (role) {
-      case UserRole.driver:
-        return _DriverDashboard(name: name);
-      case UserRole.rider:
-        return _RiderDashboard(name: name);
       case UserRole.admin:
         return _AdminDashboard(name: name);
       default:
         return _PendingDashboard(name: name);
     }
-  }
-}
-
-// ============================================================
-// Driver Dashboard
-// ============================================================
-class _DriverDashboard extends StatelessWidget {
-  final String name;
-  const _DriverDashboard({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.l10n.welcomeNameDriver(name),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
-          const SizedBox(height: 6),
-          Text(context.l10n.driverPortal,
-              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant)),
-          const SizedBox(height: 24),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: [
-                _DashboardCard(
-                  icon: Icons.route_rounded,
-                  title: context.l10n.myRides,
-                  subtitle: context.l10n.confirmedRides,
-                  color: scheme.primary,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(statusFilter: 'UPCOMING,ONGOING')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.event_available_rounded,
-                  title: context.l10n.upcoming,
-                  subtitle: context.l10n.pendingTicketsOnly,
-                  color: context.statusColors.warning,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(statusFilter: 'ASSIGNED')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.history_rounded,
-                  title: context.l10n.history,
-                  subtitle: context.l10n.completedCancelledRides,
-                  color: context.statusColors.success,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(statusFilter: 'COMPLETED,PENDING_REQUEST')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.person_rounded,
-                  title: context.l10n.profile,
-                  subtitle: context.l10n.myDetails,
-                  color: scheme.tertiary,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ============================================================
-// Rider Dashboard
-// ============================================================
-class _RiderDashboard extends StatelessWidget {
-  final String name;
-  const _RiderDashboard({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.l10n.welcomeNameRider(name),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
-          const SizedBox(height: 6),
-          Text(context.l10n.riderPortal,
-              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant)),
-          const SizedBox(height: 24),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: [
-                _DashboardCard(
-                  icon: Icons.route_rounded,
-                  title: context.l10n.myRides,
-                  subtitle: context.l10n.confirmedRides,
-                  color: scheme.primary,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(role: 'rider', statusFilter: 'UPCOMING,ONGOING')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.event_available_rounded,
-                  title: context.l10n.upcomingRides,
-                  subtitle: context.l10n.pendingTicketsOnly,
-                  color: context.statusColors.warning,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(role: 'rider', statusFilter: 'ASSIGNED')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.history_rounded,
-                  title: context.l10n.completed,
-                  subtitle: context.l10n.rideHistory,
-                  color: context.statusColors.danger,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyRidesScreen(role: 'rider', statusFilter: 'COMPLETED,PENDING_REQUEST')),
-                    );
-                  },
-                ),
-                _DashboardCard(
-                  icon: Icons.person_rounded,
-                  title: context.l10n.profile,
-                  subtitle: context.l10n.myDetails,
-                  color: scheme.tertiary,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -389,49 +227,43 @@ class _DashboardCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
-  final VoidCallback? onTap;
 
   const _DashboardCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.color,
-    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: InkWell(
-        onTap: onTap ?? () {},
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        child: Padding(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 26),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
               ),
-              const SizedBox(height: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: TextStyle(fontSize: 11.5, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                ],
-              ),
-            ],
-          ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                const SizedBox(height: 2),
+                Text(subtitle,
+                    style: TextStyle(fontSize: 11.5, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ],
         ),
       ),
     );

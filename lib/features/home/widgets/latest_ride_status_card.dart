@@ -342,8 +342,8 @@ class _AssignedUserTile extends StatelessWidget {
         ),
         if (cancelled)
           Chip(
-            label: Text(context.l10n.cancelled, style: const TextStyle(color: Colors.red, fontSize: 10)),
-            backgroundColor: const Color(0xFFFFEBEE),
+            label: Text(context.l10n.cancelled, style: TextStyle(color: context.statusColors.danger, fontSize: 10)),
+            backgroundColor: context.statusColors.dangerContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),
@@ -351,8 +351,8 @@ class _AssignedUserTile extends StatelessWidget {
           )
         else if (accepted)
           Chip(
-            label: Text(context.l10n.accepted, style: const TextStyle(color: Colors.green, fontSize: 10)),
-            backgroundColor: const Color(0xFFE8F5E9),
+            label: Text(context.l10n.accepted, style: TextStyle(color: context.statusColors.success, fontSize: 10)),
+            backgroundColor: context.statusColors.successContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),
@@ -362,8 +362,8 @@ class _AssignedUserTile extends StatelessWidget {
           const SizedBox()
         else
           Chip(
-            label: Text(context.l10n.awaiting, style: const TextStyle(color: Colors.amber, fontSize: 10)),
-            backgroundColor: Colors.amber.shade50,
+            label: Text(context.l10n.awaiting, style: TextStyle(color: context.statusColors.warning, fontSize: 10)),
+            backgroundColor: context.statusColors.warningContainer,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             labelPadding: const EdgeInsets.symmetric(horizontal: 6),

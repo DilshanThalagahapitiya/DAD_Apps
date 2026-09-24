@@ -10,11 +10,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/localization/l10n_ext.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/widgets/glass_surface.dart';
+import '../../core/widgets/tab_bar_metrics.dart';
 import '../auth/providers/auth_provider.dart';
 import '../home/screens/customer_home_tab.dart';
 import '../home/screens/customer_rides_screen.dart';
-import '../home/screens/my_vehicle_screen.dart';
+import '../legal/screens/terms_conditions_screen.dart';
 import '../profile/screens/profile_screen.dart';
 
 class CustomerShell extends StatefulWidget {
@@ -28,15 +30,30 @@ class _CustomerShellState extends State<CustomerShell> {
   int _index = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Refresh once on entry so the server's Terms & Conditions flag (and any
+    // since-completed profile) is reflected immediately — a customer can only
+    // request a driver after accepting the published terms.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AuthProvider>().refreshUser();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final name = auth.user?.fullName ?? '';
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final tabs = [
       CustomerHomeTab(name: name),
-      const CustomerRidesScreen(embedded: true),
-      const MyVehicleScreen(embedded: true),
+      // isActive keeps the list fresh: a tab built before a ride changed
+      // re-fetches the moment it becomes the visible tab.
+      CustomerRidesScreen(embedded: true, isActive: _index == 1),
+      const TermsConditionsScreen(embedded: true),
       const ProfileScreen(),
     ];
 
@@ -44,13 +61,21 @@ class _CustomerShellState extends State<CustomerShell> {
       extendBody: true,
       body: SafeArea(
         bottom: false,
-        child: IndexedStack(index: _index, children: tabs),
+        // Reserve room for the floating tab bar, otherwise the last rows of
+        // every tab are hidden behind it (extendBody draws the body under it).
+        child: Padding(
+          key: const Key('tabBarInset'),
+          padding: EdgeInsets.only(bottom: floatingTabBarInset(context)),
+          child: IndexedStack(index: _index, children: tabs),
+        ),
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).padding.bottom > 0 ? 8 : 16),
         child: GlassSurface(
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+          // Tab bar itself carries the admin brand color (tinted glass)
+          tint: AppTheme.brandBarFill(scheme, isDark: isDark),
+          border: Border.all(color: scheme.primary.withValues(alpha: 0.25)),
           child: NavigationBar(
             backgroundColor: Colors.transparent,
             selectedIndex: _index,
@@ -67,9 +92,9 @@ class _CustomerShellState extends State<CustomerShell> {
                 label: context.l10n.myRides,
               ),
               NavigationDestination(
-                icon: const Icon(Icons.directions_car_outlined),
-                selectedIcon: const Icon(Icons.directions_car_rounded),
-                label: context.l10n.myVehicle,
+                icon: const Icon(Icons.description_outlined),
+                selectedIcon: const Icon(Icons.description_rounded),
+                label: context.l10n.terms,
               ),
               NavigationDestination(
                 icon: const Icon(Icons.person_outline_rounded),

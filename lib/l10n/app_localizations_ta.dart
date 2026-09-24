@@ -26,10 +26,17 @@ class AppLocalizationsTa extends AppLocalizations {
   String get letsHire => 'ஓட்டுநரை அமர்த்துவோம்';
 
   @override
+  String get customerLoginRegisterHint =>
+      'வாடிக்கையாளர் உள்நுழைவு / பதிவு இங்கே';
+
+  @override
   String get register => 'பதிவு செய்யுங்கள்';
 
   @override
   String get otherLogins => 'அல்லது பிற உள்நுழைவுகள்';
+
+  @override
+  String get loginFromHere => 'இங்கே உள்நுழையவும்';
 
   @override
   String get support24_7 => '24/7 ஆதரவு';
@@ -346,6 +353,10 @@ class AppLocalizationsTa extends AppLocalizations {
       'ஓட்டுநர்கள் உங்களைத் தொடர்பு கொள்ளவும் அடையாளம் காணவும் உங்கள் தொலைபேசி எண் மற்றும் தே.அ.அ. எண் தேவை.';
 
   @override
+  String get detailsRequiredInfoStaff =>
+      'வாடிக்கையாளர்கள்/பயணிகள் உங்களைத் தொடர்பு கொள்ளவும் அடையாளம் காணவும் உங்கள் தொலைபேசி எண் மற்றும் தே.அ.அ. எண் தேவை.';
+
+  @override
   String get emailFromGoogle => 'மின்னஞ்சல் (Google இலிருந்து)';
 
   @override
@@ -380,6 +391,46 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get vehicleDetailsSaved => '✅ வாகன விவரங்கள் சேமிக்கப்பட்டன!';
+
+  @override
+  String get completeDriverProfile => 'உங்கள் ஓட்டுநர் சுயவிவரத்தை முடிக்கவும்';
+
+  @override
+  String get completeDriverProfileSubtitle =>
+      'பயணங்களைப் பெறத் தொடங்க உங்கள் உரிமம் மற்றும் வாகன விவரங்களைச் சேர்க்கவும்';
+
+  @override
+  String get licenseFrontPhoto => 'உரிம முன்புற புகைப்படம்';
+
+  @override
+  String get licenseBackPhoto => 'உரிம பின்புற புகைப்படம்';
+
+  @override
+  String get licenseExpiryLight => 'இலகு உரிமம் காலாவதி தேதி';
+
+  @override
+  String get licenseExpiryHeavy => 'கனரக உரிமம் காலாவதி தேதி';
+
+  @override
+  String get uploadPhoto => 'புகைப்படத்தை பதிவேற்றவும்';
+
+  @override
+  String get changePhoto => 'புகைப்படத்தை மாற்றவும்';
+
+  @override
+  String get uploading => 'பதிவேற்றுகிறது...';
+
+  @override
+  String get photoRequired => 'இந்த புகைப்படத்தை பதிவேற்றவும்';
+
+  @override
+  String get dateRequired => 'தேதியை தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get saveDriverProfile => 'ஓட்டுநர் சுயவிவரத்தை சேமிக்கவும்';
+
+  @override
+  String get driverProfileSaved => '✅ ஓட்டுநர் சுயவிவரம் சேமிக்கப்பட்டது!';
 
   @override
   String get myVehicle => 'எனது வாகனம்';
@@ -686,7 +737,16 @@ class AppLocalizationsTa extends AppLocalizations {
   String get profile => 'சுயவிவரம்';
 
   @override
+  String get settings => 'அமைப்புகள்';
+
+  @override
   String get myDetails => 'எனது விவரங்கள்';
+
+  @override
+  String get terms => 'விதிமுறைகள்';
+
+  @override
+  String get termsAndConditions => 'விதிமுறைகள் & நிபந்தனைகள்';
 
   @override
   String welcomeNameRider(String name) {
@@ -880,6 +940,57 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get rideCompletedLabel => 'பயணம் முடிந்தது';
+
+  @override
+  String get myEarnings => 'My Earnings';
+
+  @override
+  String get ridesCount => 'Rides';
+
+  @override
+  String earningsShareLabel(String pct) {
+    return '$pct% share';
+  }
+
+  @override
+  String get earningsLoadFailed => 'Couldn\'t load earnings';
+
+  @override
+  String get iAgreeToTerms => 'I have read and agree to the Terms & Conditions';
+
+  @override
+  String get termsRequiredError =>
+      'Please accept the Terms & Conditions to continue';
+
+  @override
+  String get viewFullTerms => 'View full terms';
+
+  @override
+  String termsVersionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String termsUpdatedLabel(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get termsLoadFailed => 'Couldn\'t load the Terms & Conditions';
+
+  @override
+  String get termsAcceptanceRequiredTitle => 'Terms & Conditions required';
+
+  @override
+  String get termsAcceptanceRequiredBody =>
+      'Please review and accept the Terms & Conditions to continue using the app.';
+
+  @override
+  String get iAgreeAndContinue => 'I agree & continue';
+
+  @override
+  String get termsUpdatedPleaseReview =>
+      'The Terms & Conditions were updated. Please review the latest version and accept it.';
 
   @override
   String get language => 'மொழி';

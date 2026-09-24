@@ -7,6 +7,7 @@
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import '../constants/app_constants.dart';
 
 class ApiResponse<T> {
@@ -29,6 +30,12 @@ class ApiClient {
   static final ApiClient instance = ApiClient._();
   ApiClient._();
 
+  /// Underlying HTTP client. Replaceable so tests can stub the network
+  /// (see test/theme_provider_test.dart) — never change it in the app.
+  http.Client _client = http.Client();
+  void setHttpClient(http.Client client) => _client = client;
+  http.Client get httpClient => _client;
+
   String? _token;
   // Tenant-wise theming: identifies this app build so the backend returns its
   // own brand colors. Defaults to the build-time TENANT_ID (AppConstants).
@@ -50,6 +57,9 @@ class ApiClient {
 
   Map<String, String> _headers({bool auth = true}) {
     final headers = {'Content-Type': 'application/json'};
+    // Stops ngrok's free tier from answering with its HTML warning page
+    // (which would break JSON decoding and silently drop the brand colors).
+    headers['ngrok-skip-browser-warning'] = 'true';
     if (_tenantId != null && _tenantId!.isNotEmpty) {
       headers['X-Tenant-Id'] = _tenantId!;
     }
@@ -61,7 +71,7 @@ class ApiClient {
 
   // ---- GET ----
   Future<dynamic> get(String path, {bool auth = true}) async {
-    final res = await http.get(
+    final res = await _client.get(
       Uri.parse('${AppConstants.baseUrl}$path'),
       headers: _headers(auth: auth),
     );
@@ -70,7 +80,7 @@ class ApiClient {
 
   // ---- POST ----
   Future<dynamic> post(String path, Map<String, dynamic> body, {bool auth = true}) async {
-    final res = await http.post(
+    final res = await _client.post(
       Uri.parse('${AppConstants.baseUrl}$path'),
       headers: _headers(auth: auth),
       body: jsonEncode(body),
@@ -80,12 +90,62 @@ class ApiClient {
 
   // ---- PATCH ----
   Future<dynamic> patch(String path, Map<String, dynamic> body, {bool auth = true}) async {
-    final res = await http.patch(
+    final res = await _client.patch(
       Uri.parse('${AppConstants.baseUrl}$path'),
       headers: _headers(auth: auth),
       body: jsonEncode(body),
     );
     return _handleResponse(res);
+  }
+
+  // ---- UPLOAD (multipart file upload, e.g. driver license photos) ----
+  // Returns the public URL of the uploaded file (e.g. "/uploads/abc123.jpg").
+  Future<String> uploadFile(String filePath, {bool auth = true}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}/api/upload');
+    final request = http.MultipartRequest('POST', uri);
+    // Multipart requests set their own Content-Type (multipart/form-data;
+    // boundary=...), so only copy the auth/tenant headers, not the JSON one.
+    final headers = _headers(auth: auth)..remove('Content-Type');
+    request.headers.addAll(headers);
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'file',
+        filePath,
+        // CRITICAL: MultipartFile.fromPath() does NOT detect the file type — it
+        // always sends "application/octet-stream", which the upload endpoint
+        // rejects with "Invalid file type" (this broke driver license photos).
+        // Announce the real image type, derived from the file extension.
+        contentType: mediaTypeFor(filePath),
+      ),
+    );
+
+    final streamed = await _client.send(request);
+    final res = await http.Response.fromStream(streamed);
+    final decoded = _handleResponse(res);
+    return decoded['data']['url'] as String;
+  }
+
+  /// Content type for an uploaded file, based on its extension.
+  /// Defaults to application/octet-stream for anything that is not a known
+  /// image type (the server then decides whether to accept it).
+  static MediaType mediaTypeFor(String filePath) {
+    final dot = filePath.lastIndexOf('.');
+    final ext = dot == -1 ? '' : filePath.substring(dot + 1).toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+        return MediaType('image', 'jpeg');
+      case 'png':
+        return MediaType('image', 'png');
+      case 'webp':
+        return MediaType('image', 'webp');
+      case 'heic':
+        return MediaType('image', 'heic');
+      case 'heif':
+        return MediaType('image', 'heif');
+      default:
+        return MediaType('application', 'octet-stream');
+    }
   }
 
   // ---- Response handler ----

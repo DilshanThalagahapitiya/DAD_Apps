@@ -13,13 +13,16 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ride_status_chip.dart';
 import '../../../core/widgets/fare_breakdown_card.dart';
 
 class CustomerRidesScreen extends StatefulWidget {
   final bool embedded;
-  const CustomerRidesScreen({super.key, this.embedded = false});
+  /// True while this is the visible tab (see MyRidesScreen.isActive).
+  final bool isActive;
+  const CustomerRidesScreen({super.key, this.embedded = false, this.isActive = true});
 
   @override
   State<CustomerRidesScreen> createState() => _CustomerRidesScreenState();
@@ -33,7 +36,27 @@ class _CustomerRidesScreenState extends State<CustomerRidesScreen> {
   @override
   void initState() {
     super.initState();
+    // Re-fetch when the server reports a ride change (assignment, acceptance,
+    // start, completion) while this tab is visible.
+    NotificationService.instance.ridesRevision.addListener(_onRidesChanged);
     _fetchRides();
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomerRidesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The shell keeps all tabs alive — refresh as soon as this one is shown.
+    if (!oldWidget.isActive && widget.isActive) _fetchRides();
+  }
+
+  void _onRidesChanged() {
+    if (widget.isActive) _fetchRides();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.ridesRevision.removeListener(_onRidesChanged);
+    super.dispose();
   }
 
   Future<void> _fetchRides() async {

@@ -165,7 +165,9 @@ class _LandingScreenState extends State<LandingScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber.shade600,
+                  // Admin-configured secondary brand color
+                  backgroundColor: scheme.secondary,
+                  foregroundColor: scheme.onSecondary,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.button + 4),
@@ -173,7 +175,16 @@ class _LandingScreenState extends State<LandingScreen> {
                   elevation: 0,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.customerLoginRegisterHint,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // REGISTER button → opens role-selection registration screen
               OutlinedButton.icon(
@@ -201,27 +212,52 @@ class _LandingScreenState extends State<LandingScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 16),
 
-              // or other logins
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    // Navigate to normal login
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const LoginScreen(isCustomerMode: false),
+              // "or" divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      context.l10n.or,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
-                    );
-                  },
-                  child: Text(
-                    context.l10n.otherLogins,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 13,
-                      decoration: TextDecoration.underline,
                     ),
+                  ),
+                  Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.3))),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // LOG IN FROM HERE button → normal (driver/rider/admin) login
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoginScreen(isCustomerMode: false),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.login_rounded, color: Colors.white, size: 20),
+                label: Text(
+                  context.l10n.loginFromHere,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white70, width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.button + 4),
                   ),
                 ),
               ),
@@ -301,15 +337,15 @@ class _LandingScreenState extends State<LandingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _StepCard(number: '1', label: context.l10n.step1, color: Colors.orange),
+                    child: _StepCard(number: '1', label: context.l10n.step1, color: scheme.primary),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _StepCard(number: '2', label: context.l10n.step2, color: Colors.blue),
+                    child: _StepCard(number: '2', label: context.l10n.step2, color: scheme.secondary),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _StepCard(number: '3', label: context.l10n.step3, color: Colors.green),
+                    child: _StepCard(number: '3', label: context.l10n.step3, color: scheme.tertiary),
                   ),
                 ],
               ),
@@ -342,8 +378,10 @@ class _StepCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        // Card background + border take the brand color passed in
+        color: Color.alphaBlend(color.withValues(alpha: 0.12), Colors.white),
         borderRadius: BorderRadius.circular(AppRadius.card - 8),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Column(
         children: [

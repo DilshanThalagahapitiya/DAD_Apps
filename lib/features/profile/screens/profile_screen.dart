@@ -1,19 +1,24 @@
 // ============================================================
-// Profile Screen (Customer tab)
+// Profile / Settings Screen
 // ============================================================
 // iOS-settings-style grouped list: avatar header, language,
-// My Vehicle shortcut, logout. Replaces the old modal-bottom-
-// sheet profile popup.
+// logout — plus a My Vehicle shortcut for customers only.
+// Used as the "Profile" tab in CustomerShell and the "Settings"
+// tab in DriverRiderShell.
 // ============================================================
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/localization/locale_provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/landing_screen.dart';
 import '../../home/screens/my_vehicle_screen.dart';
+import '../../legal/providers/terms_provider.dart';
+import '../../legal/screens/terms_conditions_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -21,6 +26,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final terms = context.watch<TermsProvider>();
     final user = auth.user;
     final scheme = Theme.of(context).colorScheme;
     final fullName = user?.fullName ?? '';
@@ -60,22 +66,39 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             _Group(children: [
-              _Tile(
-                icon: Icons.directions_car_rounded,
-                iconColor: context.statusColors.warning,
-                title: context.l10n.myVehicle,
-                subtitle: context.l10n.addOrEditVehicle,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MyVehicleScreen()),
+              if (auth.role == UserRole.customer) ...[
+                _Tile(
+                  icon: Icons.directions_car_rounded,
+                  iconColor: context.statusColors.warning,
+                  title: context.l10n.myVehicle,
+                  subtitle: context.l10n.addOrEditVehicle,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyVehicleScreen()),
+                  ),
                 ),
-              ),
-              const _Divider(),
+                const _Divider(),
+              ],
               _Tile(
                 icon: Icons.language_rounded,
                 iconColor: scheme.primary,
                 title: context.l10n.language,
                 trailing: _LanguagePicker(),
+              ),
+              const _Divider(),
+              // Terms & Conditions the admin publishes — required by everyone
+              // (customer, driver, rider), so it is reachable from Settings too.
+              _Tile(
+                icon: Icons.description_outlined,
+                iconColor: scheme.primary,
+                title: context.l10n.termsAndConditions,
+                subtitle: terms.hasTerms
+                    ? context.l10n.termsVersionLabel(terms.version)
+                    : context.l10n.viewFullTerms,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TermsConditionsScreen()),
+                ),
               ),
             ]),
             const SizedBox(height: 20),
@@ -98,6 +121,104 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
             ]),
+            const SizedBox(height: 24),
+            // Brand-theme status footer: shows the exact color the app received
+            // from the admin panel (tap to force a re-check). Makes it obvious
+            // whether a color change really reached this device.
+            const _ThemeSyncFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Small, language-neutral footer: [color swatch] #HEX  [sync status icon].
+/// Tap it to force a refresh from the backend.
+class _ThemeSyncFooter extends StatelessWidget {
+  const _ThemeSyncFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.watch<ThemeProvider>();
+    final scheme = Theme.of(context).colorScheme;
+
+    final IconData statusIcon;
+    final Color statusColor;
+    if (theme.isSyncing) {
+      statusIcon = Icons.sync_rounded;
+      statusColor = scheme.onSurfaceVariant;
+    } else if (theme.lastSyncOk) {
+      statusIcon = Icons.check_circle_rounded;
+      statusColor = context.statusColors.success;
+    } else {
+      statusIcon = Icons.error_outline_rounded;
+      statusColor = context.statusColors.warning;
+    }
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => context.read<ThemeProvider>().refresh(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 14,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: theme.seed,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.outlineVariant),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  theme.primaryHex,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                if (theme.secondaryHex != null) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: theme.secondarySeed,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    theme.secondaryHex!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 8),
+                Icon(statusIcon, size: 15, color: statusColor),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${AppConstants.baseUrl.replaceFirst(RegExp(r'^https?://'), '')} · ${AppConstants.themeSyncVersion}',
+              style: TextStyle(
+                fontSize: 10,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
           ],
         ),
       ),

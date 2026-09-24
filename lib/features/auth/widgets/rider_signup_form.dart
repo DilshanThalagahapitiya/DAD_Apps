@@ -5,11 +5,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/l10n_ext.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../legal/providers/terms_provider.dart';
+import '../../legal/widgets/terms_acceptance_field.dart';
 import '../providers/auth_provider.dart';
 import '../../../main.dart';
 
 class RiderSignupForm extends StatefulWidget {
-  const RiderSignupForm({super.key});
+  /// Mirrors the Terms & Conditions tick up to the signup screen so
+  /// Google sign-in can require it as well.
+  final ValueChanged<bool>? onTermsChanged;
+
+  const RiderSignupForm({super.key, this.onTermsChanged});
   @override
   State<RiderSignupForm> createState() => _RiderSignupFormState();
 }
@@ -28,6 +35,23 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
   final _emergencyPhone = TextEditingController();
   final _password = TextEditingController();
 
+  // Terms & Conditions consent (required before the account can be created)
+  bool _agreedToTerms = false;
+  bool _showTermsError = false;
+
+  /// Blocks the signup until the Terms & Conditions have been accepted.
+  bool _termsAccepted() {
+    if (_agreedToTerms) return true;
+    setState(() => _showTermsError = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.termsRequiredError),
+        backgroundColor: context.statusColors.danger,
+      ),
+    );
+    return false;
+  }
+
   @override
   void dispose() {
     _fName.dispose(); _lName.dispose(); _email.dispose(); _phone.dispose();
@@ -38,6 +62,7 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_termsAccepted()) return;
     final auth = context.read<AuthProvider>();
     final data = {
       'role': 'RIDER',
@@ -52,6 +77,12 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
       'riderLicenseNumber': _licenseNo.text.trim(),
       'emergencyContactName': _emergencyName.text.trim(),
       'emergencyContactPhone': _emergencyPhone.text.trim(),
+      // Consent recorded server-side against the version shown to the user
+      'termsVersion': context.read<TermsProvider>().version,
+      // Language the terms were actually read in (the viewer's pick, else
+      // the app language)
+      'termsLanguage':
+          context.read<TermsProvider>().languageFor(Localizations.localeOf(context)),
     };
     final success = await auth.signup(data);
     if (!mounted) return;
@@ -92,6 +123,21 @@ class _RiderSignupFormState extends State<RiderSignupForm> {
             _field(_password, context.l10n.passwordStar, Icons.lock_rounded, obscure: true),
           ]),
           const SizedBox(height: 8),
+
+          // ---- Terms & Conditions (must be accepted to register) ----
+          TermsAcceptanceField(
+            onChanged: (agreed) {
+              setState(() {
+                _agreedToTerms = agreed;
+                if (agreed) _showTermsError = false;
+              });
+              // Mirror the tick up to the signup screen (used by Google sign-in)
+              widget.onTermsChanged?.call(agreed);
+            },
+            showError: _showTermsError,
+          ),
+          const SizedBox(height: 16),
+
           ElevatedButton(
             onPressed: _submit,
             child: Text(context.l10n.registerAsRider),

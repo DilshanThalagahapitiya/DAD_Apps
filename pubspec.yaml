@@ -13,11 +13,17 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.2.2
+  # MediaType — lets uploads announce their real image type. package:http sends
+  # application/octet-stream otherwise, which the upload endpoint rejects.
+  http_parser: ^4.1.0
   provider: ^6.1.2
   shared_preferences: ^2.3.3
   intl: ^0.20.2
   geolocator: ^12.0.0
   image_picker: ^1.1.2
+  # Converts captured photos to a consistent format (e.g. iPhone HEIC -> PNG)
+  # before upload, using the native OS decoder — no pure-Dart HEIC decoding.
+  flutter_image_compress: ^2.3.0
   google_sign_in: ^6.2.2
   cached_network_image: ^3.4.1
   audioplayers: ^6.8.1

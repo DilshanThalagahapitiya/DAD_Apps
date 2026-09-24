@@ -138,7 +138,19 @@ class AppTheme {
       _build(Brightness.dark, seed: seed, secondarySeed: secondarySeed);
 
   static ThemeData _build(Brightness brightness, {Color? seed, Color? secondarySeed}) {
-    var scheme = ColorScheme.fromSeed(seedColor: seed ?? _seed, brightness: brightness);
+    final brand = seed ?? _seed;
+    var scheme = ColorScheme.fromSeed(seedColor: brand, brightness: brightness);
+
+    // Use the admin's EXACT colors rather than Material's tonal approximation:
+    // ColorScheme.fromSeed() replaces the seed with a derived tonal variant, so
+    // buttons, card tints and the tab-bar selection would show a slightly
+    // different shade than the one picked in the admin panel.
+    scheme = scheme.copyWith(
+      primary: brand,
+      onPrimary: _onColor(brand),
+      surfaceTint: brand,
+    );
+
     if (secondarySeed != null) {
       // Admin-picked "secondary" brand color overrides the auto-derived
       // secondary so the app reflects the exact two-color combination
@@ -146,13 +158,36 @@ class AppTheme {
       final secondaryScheme = ColorScheme.fromSeed(seedColor: secondarySeed, brightness: brightness);
       scheme = scheme.copyWith(
         secondary: secondarySeed,
-        onSecondary: secondaryScheme.onPrimary,
+        onSecondary: _onColor(secondarySeed),
         secondaryContainer: secondaryScheme.primaryContainer,
         onSecondaryContainer: secondaryScheme.onPrimaryContainer,
       );
     }
     final isDark = brightness == Brightness.dark;
     final surface = isDark ? const Color(0xFF121316) : const Color(0xFFF5F6FB);
+
+    // ---- Brand tints -------------------------------------------------------
+    // The admin-configured colors must be visible everywhere — not only on
+    // primary buttons — so cards, text fields and the floating tab bar each
+    // get a tint of the primary/secondary brand color. Everything below is
+    // derived from `scheme`, which ThemeProvider rebuilds whenever the admin
+    // changes the colors, so these follow automatically.
+    final cardColor = _tint(
+      scheme.primary,
+      isDark ? const Color(0xFF1C1D22) : Colors.white,
+      isDark ? 0.16 : 0.07,
+    );
+    final fieldColor = _tint(
+      scheme.primary,
+      isDark ? const Color(0xFF1C1D22) : const Color(0xFFF0F1F8),
+      isDark ? 0.14 : 0.05,
+    );
+    final accentColor = _tint(
+      scheme.secondary,
+      isDark ? const Color(0xFF1C1D22) : Colors.white,
+      isDark ? 0.20 : 0.12,
+    );
+    final cardBorder = scheme.primary.withValues(alpha: isDark ? 0.28 : 0.12);
 
     return ThemeData(
       useMaterial3: true,
@@ -176,13 +211,17 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: isDark ? const Color(0xFF1C1D22) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.card)),
+        // Brand-tinted card background + hairline brand border
+        color: cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: BorderSide(color: cardBorder),
+        ),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF1C1D22) : const Color(0xFFF0F1F8),
+        fillColor: fieldColor,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.field),
@@ -213,6 +252,8 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
@@ -221,6 +262,8 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: scheme.primary,
+          side: BorderSide(color: scheme.primary.withValues(alpha: 0.55)),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
@@ -228,6 +271,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
+          foregroundColor: scheme.primary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -237,12 +281,16 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         side: BorderSide.none,
         backgroundColor: scheme.surfaceContainerHighest,
+        // Selected chips use the admin's secondary brand color
+        selectedColor: accentColor,
+        checkmarkColor: scheme.secondary,
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.transparent,
         elevation: 0,
         height: 64,
-        indicatorColor: scheme.primary.withValues(alpha: 0.14),
+        // Selected tab: pill + icon + label all use the brand primary color
+        indicatorColor: scheme.primary.withValues(alpha: 0.18),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
@@ -267,6 +315,9 @@ class AppTheme {
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.button)),
         iconColor: scheme.onSurfaceVariant,
+        // Brand-tinted row highlight when a list row is tapped
+        tileColor: Colors.transparent,
+        selectedColor: scheme.primary,
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
@@ -275,4 +326,23 @@ class AppTheme {
       ),
     );
   }
+
+  /// Brand-tinted fill for the floating tab bar / glass bars, so the bar itself
+  /// carries the admin-configured color instead of plain white.
+  static Color brandBarFill(ColorScheme scheme, {bool isDark = false}) => _tint(
+        scheme.primary,
+        isDark ? const Color(0xFF191A1F) : Colors.white,
+        isDark ? 0.22 : 0.10,
+      );
+
+  /// Blend a dose of [brand] into [base] — used for card / field / bar fills.
+  static Color _tint(Color brand, Color base, double opacity) =>
+      Color.alphaBlend(brand.withValues(alpha: opacity), base);
+
+  /// Black or white — whichever stays readable on [color]. Keeps button labels
+  /// legible even when the admin picks a very light or very dark brand color.
+  static Color _onColor(Color color) =>
+      ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+          ? Colors.white
+          : Colors.black;
 }

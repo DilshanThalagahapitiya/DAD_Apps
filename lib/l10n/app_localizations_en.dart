@@ -25,10 +25,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get letsHire => 'Let\'s Hire';
 
   @override
+  String get customerLoginRegisterHint => 'Customer login / register from here';
+
+  @override
   String get register => 'Register';
 
   @override
   String get otherLogins => 'or other logins';
+
+  @override
+  String get loginFromHere => 'Log in from here';
 
   @override
   String get support24_7 => '24/7 Support';
@@ -130,13 +136,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get admin => 'Admin';
 
   @override
-  String get iWantToDrive => 'I want to drive';
+  String get iWantToDrive => 'I am a Driver';
 
   @override
-  String get iNeedARideHome => 'I need a ride home';
+  String get iNeedARideHome => 'I am a Rider';
 
   @override
-  String get iOwnAVehicle => 'I own a vehicle';
+  String get iOwnAVehicle => 'I want Driver';
 
   @override
   String get iAmAHotelPartner => 'I\'m a hotel partner';
@@ -343,6 +349,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your phone number and NIC are needed so drivers can contact you and we can confirm your identity.';
 
   @override
+  String get detailsRequiredInfoStaff =>
+      'Your phone number and NIC are needed so customers/riders can contact you and we can confirm your identity.';
+
+  @override
   String get emailFromGoogle => 'Email (from Google)';
 
   @override
@@ -377,6 +387,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vehicleDetailsSaved => '✅ Vehicle details saved!';
+
+  @override
+  String get completeDriverProfile => 'Complete Your Driver Profile';
+
+  @override
+  String get completeDriverProfileSubtitle =>
+      'Add your license and vehicle details to start receiving rides';
+
+  @override
+  String get licenseFrontPhoto => 'License Front Photo';
+
+  @override
+  String get licenseBackPhoto => 'License Back Photo';
+
+  @override
+  String get licenseExpiryLight => 'Light License Expiry Date';
+
+  @override
+  String get licenseExpiryHeavy => 'Heavy License Expiry Date';
+
+  @override
+  String get uploadPhoto => 'Upload Photo';
+
+  @override
+  String get changePhoto => 'Change Photo';
+
+  @override
+  String get uploading => 'Uploading...';
+
+  @override
+  String get photoRequired => 'Please upload this photo';
+
+  @override
+  String get dateRequired => 'Please select a date';
+
+  @override
+  String get saveDriverProfile => 'Save Driver Profile';
+
+  @override
+  String get driverProfileSaved => '✅ Driver profile saved!';
 
   @override
   String get myVehicle => 'My Vehicle';
@@ -678,7 +728,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile => 'Profile';
 
   @override
+  String get settings => 'Settings';
+
+  @override
   String get myDetails => 'My details';
+
+  @override
+  String get terms => 'Terms';
+
+  @override
+  String get termsAndConditions => 'Terms & Conditions';
 
   @override
   String welcomeNameRider(String name) {
@@ -872,6 +931,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rideCompletedLabel => 'Ride Completed';
+
+  @override
+  String get myEarnings => 'My Earnings';
+
+  @override
+  String get ridesCount => 'Rides';
+
+  @override
+  String earningsShareLabel(String pct) {
+    return '$pct% share';
+  }
+
+  @override
+  String get earningsLoadFailed => 'Couldn\'t load earnings';
+
+  @override
+  String get iAgreeToTerms => 'I have read and agree to the Terms & Conditions';
+
+  @override
+  String get termsRequiredError =>
+      'Please accept the Terms & Conditions to continue';
+
+  @override
+  String get viewFullTerms => 'View full terms';
+
+  @override
+  String termsVersionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String termsUpdatedLabel(String date) {
+    return 'Updated $date';
+  }
+
+  @override
+  String get termsLoadFailed => 'Couldn\'t load the Terms & Conditions';
+
+  @override
+  String get termsAcceptanceRequiredTitle => 'Terms & Conditions required';
+
+  @override
+  String get termsAcceptanceRequiredBody =>
+      'Please review and accept the Terms & Conditions to continue using the app.';
+
+  @override
+  String get iAgreeAndContinue => 'I agree & continue';
+
+  @override
+  String get termsUpdatedPleaseReview =>
+      'The Terms & Conditions were updated. Please review the latest version and accept it.';
 
   @override
   String get language => 'Language';

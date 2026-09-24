@@ -4,11 +4,15 @@
 // Shows received tickets (ASSIGNED), can Accept or Cancel.
 // Displays all rides: ASSIGNED, UPCOMING, ONGOING, COMPLETED.
 // Works for both driver and rider roles.
+// When `embedded` is true, this renders as a tab inside
+// DriverRiderShell (no own Scaffold/AppBar) with a plain title
+// instead — see `title`.
 // ============================================================
 
 import 'package:flutter/material.dart';
 import '../../../core/localization/l10n_ext.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/ride_status_chip.dart';
 import '../../../core/widgets/fare_breakdown_card.dart';
@@ -17,7 +21,31 @@ import 'ride_edit_screen.dart';
 class MyRidesScreen extends StatefulWidget {
   final String? statusFilter; // Optional: "UPCOMING", "COMPLETED", "ASSIGNED", etc.
   final String role; // "driver" or "rider" — determines which API endpoint to use
-  const MyRidesScreen({super.key, this.statusFilter, this.role = 'driver'});
+  final bool embedded;
+  /// Overrides the title shown when embedded (falls back to the role's
+  /// "My Rides / Tickets" label). Ignored when not embedded.
+  final String? title;
+  /// Optional "Welcome, {name}" line shown above the title when embedded
+  /// (e.g. on the Dashboard/Home tab). Ignored when not embedded.
+  final String? greeting;
+  /// True while this list is the tab the user is looking at. The shells keep
+  /// every tab alive in an IndexedStack, so a list that was built before a ride
+  /// changed would otherwise keep showing stale data — it re-fetches when it
+  /// becomes the visible tab.
+  final bool isActive;
+  /// Optional widget shown under the title when embedded — e.g. the earnings
+  /// summary tiles on the Dashboard tab. Ignored when not embedded.
+  final Widget? summary;
+  const MyRidesScreen({
+    super.key,
+    this.statusFilter,
+    this.role = 'driver',
+    this.embedded = false,
+    this.title,
+    this.greeting,
+    this.isActive = true,
+    this.summary,
+  });
   @override
   State<MyRidesScreen> createState() => _MyRidesScreenState();
 }
@@ -34,7 +62,29 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
   @override
   void initState() {
     super.initState();
+    // Re-fetch whenever the server reports a ride change (new assignment,
+    // acceptance, start, completion) — only while this tab is visible.
+    NotificationService.instance.ridesRevision.addListener(_onRidesChanged);
     _fetchRides();
+  }
+
+  @override
+  void didUpdateWidget(covariant MyRidesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // This tab was built earlier and has stale data: refresh as soon as it
+    // becomes the visible tab. This is how the Dashboard shows a ride that was
+    // just accepted in the Upcoming tab.
+    if (!oldWidget.isActive && widget.isActive) _fetchRides();
+  }
+
+  void _onRidesChanged() {
+    if (widget.isActive) _fetchRides();
+  }
+
+  @override
+  void dispose() {
+    NotificationService.instance.ridesRevision.removeListener(_onRidesChanged);
+    super.dispose();
   }
 
   List<dynamic> get _filteredRides {
@@ -63,16 +113,18 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
   Future<void> _action(String rideId, String action) async {
     try {
       await ApiClient.instance.patch('$_ticketsEndpoint/$rideId', {'action': action});
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(action == 'ACCEPT' ? context.l10n.ticketAccepted : context.l10n.ticketCancelled),
-          backgroundColor: action == 'ACCEPT' ? Colors.green : Colors.red,
+          backgroundColor: action == 'ACCEPT' ? context.statusColors.success : context.statusColors.danger,
         ),
       );
       _fetchRides();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: Colors.red),
+        SnackBar(content: Text(context.l10n.failed(e.toString())), backgroundColor: context.statusColors.danger),
       );
     }
   }
@@ -86,11 +138,8 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
   Widget build(BuildContext context) {
     final isRider = widget.role == 'rider';
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isRider ? context.l10n.myRidesTicketsRider : context.l10n.myRidesTickets),
-      ),
-      body: _loading
+
+    final body = _loading
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
               ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -263,7 +312,45 @@ class _MyRidesScreenState extends State<MyRidesScreen> {
                         );
                         },
                       ),
-                    ),
+                    );
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.greeting != null) ...[
+                  Text(
+                    widget.greeting!,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: scheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 2),
+                ],
+                Text(
+                  widget.title ?? (isRider ? context.l10n.myRidesTicketsRider : context.l10n.myRidesTickets),
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                ),
+                if (widget.summary != null) ...[
+                  const SizedBox(height: 12),
+                  widget.summary!,
+                ],
+              ],
+            ),
+          ),
+          Expanded(child: body),
+        ],
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isRider ? context.l10n.myRidesTicketsRider : context.l10n.myRidesTickets),
+      ),
+      body: body,
     );
   }
 }
